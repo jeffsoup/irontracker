@@ -7,12 +7,14 @@ import { workoutService } from './services/workoutService'
 import { Exercise, Workout } from './types/Exercise'
 import { supabase } from './lib/supabase';
 import { User } from '@supabase/supabase-js';
-import { AuthForm } from './components/AuthForm';
+//import { AuthForm } from './components/AuthForm';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import BuilderPage from './components/BuilderPage';
+import './builder-registry';
 
-const LOGIN_REQUIRED = import.meta.env.VITE_LOGIN_REQUIRED === 'true';
+//const LOGIN_REQUIRED = import.meta.env.VITE_LOGIN_REQUIRED === 'true';
 
 function App() {
-
 
   const [user, setUser] = useState<User | null>(null);
 
@@ -131,49 +133,102 @@ function App() {
   }
 
   return (
-    <Container maxWidth="lg">
-      <Box sx={{ my: 4 }}>
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 4 }}>
-          <Typography variant="h4" component="h1">
-            Exercise Tracker
-          </Typography>
-          <Button
-            variant="contained"
-            color={activeWorkout ? 'secondary' : 'primary'}
-            onClick={activeWorkout ? handleFinishWorkout : () => {
-              setDialogOpen(true);
+    <Router>
+      <Routes>
+        <Route path="/" element={
+          <div
+            style={{
+              width: '100vw',
+              maxWidth: '100vw',
+              margin: 0,
+              padding: '0 16px',
+              boxSizing: 'border-box',
+              minHeight: '100vh'
             }}
           >
-            {activeWorkout ? 'Finish Workout' : 'Start Workout'}
-          </Button>
-        </Box>
-        <ExerciseTabs 
-          onDelete={handleDeleteExercise} 
-          activeWorkout={activeWorkout}
-          onShowSnackbar={showSnackbar}
-          setActiveWorkout={setActiveWorkout}
-        />
-        <WorkoutDialog
-          open={dialogOpen}
-          onClose={() => setDialogOpen(false)}
-          onStart={handleStartWorkout}
-          //user={user}
-        />
-        <Snackbar
-          open={snackbarOpen}
-          autoHideDuration={3000}
-          onClose={handleCloseSnackbar}
-          anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
-        >
-          <Alert 
-            onClose={handleCloseSnackbar} 
-            severity={snackbarMessage.includes('Failed') ? 'error' : 'success'}
+            <Box sx={{ my: 4 }}>
+              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 4 }}>
+                <Typography variant="h4" component="h1">
+                  Exercise Tracker
+                </Typography>
+                <Button
+                  variant="contained"
+                  color={activeWorkout ? 'secondary' : 'primary'}
+                  onClick={activeWorkout ? handleFinishWorkout : () => {
+                    setDialogOpen(true);
+                  }}
+                >
+                  {activeWorkout ? 'Finish Workout' : 'Start Workout'}
+                </Button>
+              </Box>
+              <ExerciseTabs 
+                onDelete={handleDeleteExercise} 
+                activeWorkout={activeWorkout}
+                onShowSnackbar={showSnackbar}
+                setActiveWorkout={setActiveWorkout}
+              />
+              <WorkoutDialog
+                open={dialogOpen}
+                onClose={() => setDialogOpen(false)}
+                onStart={handleStartWorkout}
+                //user={user}
+              />
+              <Snackbar
+                open={snackbarOpen}
+                autoHideDuration={3000}
+                onClose={handleCloseSnackbar}
+                anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+              >
+                <Alert 
+                  onClose={handleCloseSnackbar} 
+                  severity={snackbarMessage.includes('Failed') ? 'error' : 'success'}
+                >
+                  {snackbarMessage}
+                </Alert>
+              </Snackbar>
+            </Box>
+          </div>
+        } />
+        <Route path="/builder/*" element={
+          <div
+            style={{
+              width: '100vw',
+              maxWidth: '100vw',
+              margin: 0,
+              padding: 0,
+              boxSizing: 'border-box',
+              overflowX: 'hidden',
+              minHeight: '100vh'
+            }}
           >
-            {snackbarMessage}
-          </Alert>
-        </Snackbar>
-      </Box>
-    </Container>
+            <BuilderPage />
+          </div>
+        } />
+        <Route path="/test" element={
+          <div style={{ color: 'black' }}>Test Route Works</div>
+        } />
+        <Route path="/builder-demo/*" element={
+          <div
+            style={{
+              width: '100vw',
+              maxWidth: '100vw',
+              margin: 0,
+              padding: 0,
+              boxSizing: 'border-box',
+              overflowX: 'hidden',
+              minHeight: '100vh'
+            }}
+          >
+            <BuilderPage />
+          </div>
+        } />
+        <Route path="*" element={
+          <div style={{ color: 'red', textAlign: 'center', marginTop: '2rem' }}>
+            404 - Page Not Found
+          </div>
+        } />
+      </Routes>
+    </Router>
   )
 }
 

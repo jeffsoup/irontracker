@@ -271,10 +271,10 @@ export const ExerciseForm: React.FC<ExerciseFormProps> = ({ onSubmit, activeWork
           label="Weight (lbs)"
           type="number"
           value={formData.weight}
-          onChange={(e) => setFormData({ ...formData, weight: Number(e.target.value) })}
+          onChange={(e) => setFormData({ ...formData, weight: parseFloat(e.target.value) })}
           required
           fullWidth
-          inputProps={{ min: 0 }}
+          inputProps={{ min: 0, step: 'any' }}
         />
         <LocalizationProvider dateAdapter={AdapterDateFns}>
           <DatePicker
