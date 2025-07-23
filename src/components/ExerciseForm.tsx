@@ -303,7 +303,7 @@ export const ExerciseForm: React.FC<ExerciseFormProps> = ({ onSubmit, activeWork
           fullWidth
         />
         <Button type="submit" variant="contained" color="primary">
-          💪 Add Set
+          💪 Add Set 💪
         </Button>
       </Stack>
     </Box>
