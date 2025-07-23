@@ -75,7 +75,7 @@ export const WorkoutsList: React.FC<WorkoutsListProps> = ({ activeWorkout, onRes
 
   if (workouts.length === 0) {
     return (
-      <div className="minimalist-empty-state">
+      <div className="fitness-empty-state">
         <Typography variant="h3" component="h3">
           No Workouts Yet
         </Typography>
