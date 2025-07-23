@@ -140,9 +140,26 @@ function App() {
           <div className="fitness-app">
             <div className="fitness-container">
               <header className="fitness-header">
-                <Typography variant="h1" component="h1">
-                  Exercise Tracker
-                </Typography>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                  <Typography variant="h1" component="h1">
+                    💪 IronTracker
+                  </Typography>
+                  {activeWorkout && (
+                    <Box sx={{
+                      background: 'linear-gradient(45deg, #00ff88, #00d4ff)',
+                      padding: '4px 12px',
+                      borderRadius: '20px',
+                      fontSize: '0.75rem',
+                      fontWeight: 'bold',
+                      color: '#0a0a0a',
+                      textTransform: 'uppercase',
+                      letterSpacing: '0.05em',
+                      animation: 'pulse-glow 2s infinite'
+                    }}>
+                      🔥 WORKOUT ACTIVE
+                    </Box>
+                  )}
+                </Box>
                 <Button
                   variant="contained"
                   color={activeWorkout ? 'secondary' : 'primary'}
@@ -150,11 +167,13 @@ function App() {
                     setDialogOpen(true);
                   }}
                   sx={{
-                    minWidth: '160px',
-                    height: '48px'
+                    minWidth: '180px',
+                    height: '56px',
+                    fontSize: '1rem',
+                    fontWeight: 'bold'
                   }}
                 >
-                  {activeWorkout ? 'Finish Workout' : 'Start Workout'}
+                  {activeWorkout ? '🏁 FINISH WORKOUT' : '🚀 START WORKOUT'}
                 </Button>
               </header>
 
