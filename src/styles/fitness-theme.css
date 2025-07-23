@@ -1,0 +1,603 @@
+/* Modern Fitness/Gym Theme */
+
+:root {
+  /* Primary Fitness Colors */
+  --fitness-primary: #ff6b35;
+  --fitness-primary-light: #ff8a5b;
+  --fitness-primary-dark: #e55a2b;
+  
+  --fitness-secondary: #00d4ff;
+  --fitness-secondary-light: #33ddff;
+  --fitness-secondary-dark: #00bfe6;
+  
+  --fitness-accent: #f7931e;
+  --fitness-accent-light: #ff9f2e;
+  --fitness-accent-dark: #e8851a;
+  
+  /* Vibrant Accent Colors */
+  --fitness-electric: #00ffff;
+  --fitness-neon-green: #39ff14;
+  --fitness-hot-pink: #ff1b8d;
+  --fitness-purple: #8a2be2;
+  
+  /* Dark Theme Colors */
+  --fitness-bg-primary: #0a0a0a;
+  --fitness-bg-secondary: #151515;
+  --fitness-bg-tertiary: #1a1a1a;
+  --fitness-bg-card: #1e1e1e;
+  --fitness-bg-elevated: #242424;
+  
+  /* Text Colors */
+  --fitness-text-primary: #ffffff;
+  --fitness-text-secondary: #e0e0e0;
+  --fitness-text-muted: #a0a0a0;
+  --fitness-text-disabled: #666666;
+  
+  /* Border Colors */
+  --fitness-border: #333333;
+  --fitness-border-light: #404040;
+  --fitness-border-accent: var(--fitness-primary);
+  
+  /* Status Colors */
+  --fitness-success: #00ff88;
+  --fitness-error: #ff4757;
+  --fitness-warning: #ffa502;
+  --fitness-info: var(--fitness-secondary);
+  
+  /* Gradients */
+  --fitness-gradient-primary: linear-gradient(135deg, var(--fitness-primary), var(--fitness-accent));
+  --fitness-gradient-secondary: linear-gradient(135deg, var(--fitness-secondary), var(--fitness-electric));
+  --fitness-gradient-dark: linear-gradient(135deg, var(--fitness-bg-secondary), var(--fitness-bg-tertiary));
+  --fitness-gradient-card: linear-gradient(135deg, #1e1e1e, #242424);
+  
+  /* Shadows */
+  --fitness-shadow-sm: 0 2px 4px rgba(255, 107, 53, 0.1);
+  --fitness-shadow-md: 0 4px 8px rgba(255, 107, 53, 0.15);
+  --fitness-shadow-lg: 0 8px 16px rgba(255, 107, 53, 0.2);
+  --fitness-shadow-xl: 0 12px 24px rgba(255, 107, 53, 0.25);
+  --fitness-shadow-glow: 0 0 20px rgba(255, 107, 53, 0.3);
+  
+  /* Border Radius */
+  --fitness-radius-sm: 4px;
+  --fitness-radius-md: 8px;
+  --fitness-radius-lg: 12px;
+  --fitness-radius-xl: 16px;
+  --fitness-radius-full: 50px;
+  
+  /* Spacing */
+  --fitness-space-xs: 0.25rem;
+  --fitness-space-sm: 0.5rem;
+  --fitness-space-md: 1rem;
+  --fitness-space-lg: 1.5rem;
+  --fitness-space-xl: 2rem;
+  --fitness-space-2xl: 3rem;
+  --fitness-space-3xl: 4rem;
+  
+  /* Typography */
+  --fitness-font-primary: 'Rajdhani', 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  --fitness-font-secondary: 'Orbitron', 'Rajdhani', sans-serif;
+  --fitness-font-body: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  
+  --fitness-font-size-xs: 0.75rem;
+  --fitness-font-size-sm: 0.875rem;
+  --fitness-font-size-base: 1rem;
+  --fitness-font-size-lg: 1.125rem;
+  --fitness-font-size-xl: 1.25rem;
+  --fitness-font-size-2xl: 1.5rem;
+  --fitness-font-size-3xl: 2rem;
+  --fitness-font-size-4xl: 2.5rem;
+  --fitness-font-size-5xl: 3rem;
+  
+  --fitness-font-weight-light: 300;
+  --fitness-font-weight-normal: 400;
+  --fitness-font-weight-medium: 500;
+  --fitness-font-weight-semibold: 600;
+  --fitness-font-weight-bold: 700;
+  --fitness-font-weight-black: 900;
+  
+  /* Transitions */
+  --fitness-transition-fast: 150ms ease-out;
+  --fitness-transition-normal: 300ms ease-out;
+  --fitness-transition-slow: 500ms ease-out;
+}
+
+/* Global Reset and Base Styles */
+* {
+  box-sizing: border-box;
+}
+
+body {
+  font-family: var(--fitness-font-body);
+  background: var(--fitness-bg-primary);
+  color: var(--fitness-text-primary);
+  margin: 0;
+  padding: 0;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Fitness App Container */
+.fitness-app {
+  min-height: 100vh;
+  background: var(--fitness-bg-primary);
+  font-family: var(--fitness-font-body);
+}
+
+/* Typography */
+.fitness-app h1,
+.fitness-app .MuiTypography-h1 {
+  font-family: var(--fitness-font-primary);
+  font-size: var(--fitness-font-size-4xl);
+  font-weight: var(--fitness-font-weight-black);
+  color: var(--fitness-text-primary);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin: 0;
+  text-shadow: 0 0 10px rgba(255, 107, 53, 0.3);
+}
+
+.fitness-app h2,
+.fitness-app .MuiTypography-h2 {
+  font-family: var(--fitness-font-primary);
+  font-size: var(--fitness-font-size-3xl);
+  font-weight: var(--fitness-font-weight-bold);
+  color: var(--fitness-text-primary);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  margin: 0;
+}
+
+.fitness-app h3,
+.fitness-app .MuiTypography-h3 {
+  font-family: var(--fitness-font-primary);
+  font-size: var(--fitness-font-size-2xl);
+  font-weight: var(--fitness-font-weight-bold);
+  color: var(--fitness-text-primary);
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  margin: 0;
+}
+
+.fitness-app p,
+.fitness-app .MuiTypography-body1 {
+  font-size: var(--fitness-font-size-base);
+  color: var(--fitness-text-secondary);
+  line-height: 1.6;
+  margin: 0;
+}
+
+.fitness-app .MuiTypography-body2 {
+  font-size: var(--fitness-font-size-sm);
+  color: var(--fitness-text-muted);
+}
+
+/* Layout Components */
+.fitness-container {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: var(--fitness-space-xl);
+  min-height: 100vh;
+}
+
+.fitness-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--fitness-space-2xl) 0;
+  margin-bottom: var(--fitness-space-3xl);
+  border-bottom: 2px solid var(--fitness-border);
+  background: var(--fitness-gradient-dark);
+  border-radius: var(--fitness-radius-lg);
+  padding: var(--fitness-space-xl);
+  box-shadow: var(--fitness-shadow-md);
+}
+
+.fitness-content {
+  background: var(--fitness-gradient-card);
+  border-radius: var(--fitness-radius-lg);
+  border: 1px solid var(--fitness-border);
+  overflow: hidden;
+  box-shadow: var(--fitness-shadow-lg);
+}
+
+/* Card Styles */
+.fitness-card {
+  background: var(--fitness-gradient-card);
+  border-radius: var(--fitness-radius-lg);
+  border: 1px solid var(--fitness-border);
+  padding: var(--fitness-space-xl);
+  transition: all var(--fitness-transition-normal);
+  box-shadow: var(--fitness-shadow-sm);
+}
+
+.fitness-card:hover {
+  border-color: var(--fitness-primary);
+  box-shadow: var(--fitness-shadow-glow);
+  transform: translateY(-2px);
+}
+
+/* Button Styles */
+.fitness-app .MuiButton-root {
+  font-family: var(--fitness-font-primary);
+  font-weight: var(--fitness-font-weight-bold);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  border-radius: var(--fitness-radius-full);
+  padding: var(--fitness-space-md) var(--fitness-space-xl);
+  transition: all var(--fitness-transition-normal);
+  box-shadow: var(--fitness-shadow-sm);
+  border: 2px solid transparent;
+}
+
+.fitness-app .MuiButton-contained {
+  background: var(--fitness-gradient-primary);
+  color: var(--fitness-text-primary);
+  border: 2px solid var(--fitness-primary);
+}
+
+.fitness-app .MuiButton-contained:hover {
+  background: var(--fitness-gradient-primary);
+  border-color: var(--fitness-primary-light);
+  box-shadow: var(--fitness-shadow-glow);
+  transform: translateY(-2px);
+  filter: brightness(1.1);
+}
+
+.fitness-app .MuiButton-contained.MuiButton-colorSecondary {
+  background: var(--fitness-gradient-secondary);
+  border-color: var(--fitness-secondary);
+}
+
+.fitness-app .MuiButton-contained.MuiButton-colorSecondary:hover {
+  background: var(--fitness-gradient-secondary);
+  border-color: var(--fitness-secondary-light);
+  filter: brightness(1.1);
+}
+
+.fitness-app .MuiButton-outlined {
+  border: 2px solid var(--fitness-primary);
+  color: var(--fitness-primary);
+  background: transparent;
+}
+
+.fitness-app .MuiButton-outlined:hover {
+  border-color: var(--fitness-primary-light);
+  background: rgba(255, 107, 53, 0.1);
+  color: var(--fitness-primary-light);
+  box-shadow: var(--fitness-shadow-md);
+}
+
+/* Tab Styles */
+.fitness-app .MuiTabs-root {
+  background: var(--fitness-bg-secondary);
+  border-bottom: 2px solid var(--fitness-border);
+}
+
+.fitness-app .MuiTabs-indicator {
+  background: var(--fitness-gradient-primary);
+  height: 3px;
+  border-radius: var(--fitness-radius-sm);
+}
+
+.fitness-app .MuiTab-root {
+  font-family: var(--fitness-font-primary);
+  font-weight: var(--fitness-font-weight-semibold);
+  text-transform: uppercase;
+  color: var(--fitness-text-muted);
+  padding: var(--fitness-space-lg) var(--fitness-space-xl);
+  min-height: 60px;
+  transition: all var(--fitness-transition-fast);
+  letter-spacing: 0.02em;
+}
+
+.fitness-app .MuiTab-root:hover {
+  color: var(--fitness-primary);
+  background: rgba(255, 107, 53, 0.05);
+}
+
+.fitness-app .MuiTab-root.Mui-selected {
+  color: var(--fitness-primary);
+  font-weight: var(--fitness-font-weight-bold);
+  text-shadow: 0 0 8px rgba(255, 107, 53, 0.5);
+}
+
+.fitness-app .MuiTab-root.Mui-disabled {
+  color: var(--fitness-text-disabled);
+  opacity: 0.5;
+}
+
+/* Form Elements */
+.fitness-app .MuiTextField-root {
+  margin-bottom: var(--fitness-space-lg);
+}
+
+.fitness-app .MuiOutlinedInput-root {
+  border-radius: var(--fitness-radius-md);
+  background: var(--fitness-bg-card);
+  transition: all var(--fitness-transition-fast);
+  color: var(--fitness-text-primary);
+}
+
+.fitness-app .MuiOutlinedInput-root .MuiOutlinedInput-notchedOutline {
+  border-color: var(--fitness-border);
+  border-width: 2px;
+}
+
+.fitness-app .MuiOutlinedInput-root:hover .MuiOutlinedInput-notchedOutline {
+  border-color: var(--fitness-primary);
+}
+
+.fitness-app .MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline {
+  border-color: var(--fitness-primary);
+  box-shadow: 0 0 0 2px rgba(255, 107, 53, 0.2);
+}
+
+.fitness-app .MuiInputLabel-root {
+  color: var(--fitness-text-muted);
+  font-weight: var(--fitness-font-weight-medium);
+}
+
+.fitness-app .MuiInputLabel-root.Mui-focused {
+  color: var(--fitness-primary);
+}
+
+.fitness-app .MuiInputBase-input {
+  color: var(--fitness-text-primary);
+}
+
+/* Select/Dropdown Styles */
+.fitness-app .MuiSelect-root {
+  color: var(--fitness-text-primary);
+}
+
+.fitness-app .MuiMenuItem-root {
+  color: var(--fitness-text-primary);
+  background: var(--fitness-bg-card);
+}
+
+.fitness-app .MuiMenuItem-root:hover {
+  background: rgba(255, 107, 53, 0.1);
+}
+
+.fitness-app .MuiMenuItem-root.Mui-selected {
+  background: rgba(255, 107, 53, 0.2);
+}
+
+/* Paper/Menu Styles */
+.fitness-app .MuiPaper-root {
+  background: var(--fitness-bg-card) !important;
+  border: 1px solid var(--fitness-border);
+  box-shadow: var(--fitness-shadow-lg);
+}
+
+/* Alert/Snackbar Styles */
+.fitness-app .MuiAlert-root {
+  border-radius: var(--fitness-radius-md);
+  font-weight: var(--fitness-font-weight-medium);
+  box-shadow: var(--fitness-shadow-lg);
+  border: 1px solid;
+}
+
+.fitness-app .MuiAlert-standardSuccess {
+  background: var(--fitness-success);
+  color: var(--fitness-bg-primary);
+  border-color: var(--fitness-success);
+}
+
+.fitness-app .MuiAlert-standardError {
+  background: var(--fitness-error);
+  color: var(--fitness-text-primary);
+  border-color: var(--fitness-error);
+}
+
+/* Table Styles */
+.fitness-app .MuiTableContainer-root {
+  background: var(--fitness-bg-card);
+  border-radius: var(--fitness-radius-md);
+  border: 1px solid var(--fitness-border);
+  box-shadow: var(--fitness-shadow-md);
+}
+
+.fitness-app .MuiTableHead-root {
+  background: var(--fitness-bg-secondary);
+}
+
+.fitness-app .MuiTableCell-head {
+  font-family: var(--fitness-font-primary);
+  font-weight: var(--fitness-font-weight-bold);
+  color: var(--fitness-text-primary);
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  border-bottom: 2px solid var(--fitness-border);
+  background: var(--fitness-bg-secondary);
+}
+
+.fitness-app .MuiTableCell-body {
+  color: var(--fitness-text-secondary);
+  border-bottom: 1px solid var(--fitness-border);
+}
+
+.fitness-app .MuiTableRow-root:hover {
+  background: rgba(255, 107, 53, 0.05);
+}
+
+.fitness-app .MuiTableRow-root:nth-of-type(even) {
+  background: rgba(255, 255, 255, 0.02);
+}
+
+/* Dialog Styles */
+.fitness-app .MuiDialog-paper {
+  background: var(--fitness-bg-card);
+  border-radius: var(--fitness-radius-lg);
+  border: 1px solid var(--fitness-border);
+  box-shadow: var(--fitness-shadow-xl);
+  padding: var(--fitness-space-xl);
+}
+
+.fitness-app .MuiDialogTitle-root {
+  font-family: var(--fitness-font-primary);
+  font-weight: var(--fitness-font-weight-bold);
+  color: var(--fitness-text-primary);
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  padding: 0 0 var(--fitness-space-lg) 0;
+  border-bottom: 1px solid var(--fitness-border);
+}
+
+.fitness-app .MuiDialogContent-root {
+  padding: var(--fitness-space-lg) 0;
+  color: var(--fitness-text-secondary);
+}
+
+.fitness-app .MuiDialogActions-root {
+  padding: var(--fitness-space-lg) 0 0 0;
+  gap: var(--fitness-space-sm);
+  border-top: 1px solid var(--fitness-border);
+}
+
+/* Icon Button Styles */
+.fitness-app .MuiIconButton-root {
+  color: var(--fitness-text-muted);
+  transition: all var(--fitness-transition-fast);
+  border-radius: var(--fitness-radius-md);
+}
+
+.fitness-app .MuiIconButton-root:hover {
+  background: rgba(255, 107, 53, 0.1);
+  color: var(--fitness-primary);
+  transform: scale(1.1);
+}
+
+/* Chip Styles */
+.fitness-app .MuiChip-root {
+  border-radius: var(--fitness-radius-full);
+  font-weight: var(--fitness-font-weight-medium);
+  background: var(--fitness-bg-elevated);
+  color: var(--fitness-text-primary);
+  border: 1px solid var(--fitness-border);
+}
+
+.fitness-app .MuiChip-outlined {
+  border-color: var(--fitness-primary);
+  color: var(--fitness-primary);
+}
+
+.fitness-app .MuiChip-outlined:hover {
+  background: rgba(255, 107, 53, 0.1);
+}
+
+/* Rating Styles */
+.fitness-app .MuiRating-root {
+  color: var(--fitness-accent);
+}
+
+.fitness-app .MuiRating-iconEmpty {
+  color: var(--fitness-border-light);
+}
+
+/* Empty State */
+.fitness-empty-state {
+  text-align: center;
+  padding: var(--fitness-space-3xl);
+  color: var(--fitness-text-muted);
+  background: var(--fitness-gradient-card);
+  border-radius: var(--fitness-radius-lg);
+  border: 1px solid var(--fitness-border);
+  margin: var(--fitness-space-xl);
+}
+
+.fitness-empty-state h3 {
+  margin-bottom: var(--fitness-space-lg);
+  color: var(--fitness-text-secondary);
+  text-shadow: 0 0 8px rgba(255, 107, 53, 0.3);
+}
+
+.fitness-empty-state p {
+  font-size: var(--fitness-font-size-lg);
+}
+
+/* Scrollbar Styling */
+.fitness-app ::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.fitness-app ::-webkit-scrollbar-track {
+  background: var(--fitness-bg-secondary);
+}
+
+.fitness-app ::-webkit-scrollbar-thumb {
+  background: var(--fitness-primary);
+  border-radius: var(--fitness-radius-sm);
+}
+
+.fitness-app ::-webkit-scrollbar-thumb:hover {
+  background: var(--fitness-primary-light);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .fitness-container {
+    padding: var(--fitness-space-lg);
+  }
+  
+  .fitness-header {
+    flex-direction: column;
+    gap: var(--fitness-space-lg);
+    align-items: stretch;
+    padding: var(--fitness-space-lg);
+    margin-bottom: var(--fitness-space-xl);
+  }
+  
+  .fitness-app .MuiTab-root {
+    padding: var(--fitness-space-md) var(--fitness-space-lg);
+    min-width: 80px;
+    font-size: var(--fitness-font-size-sm);
+  }
+  
+  .fitness-app h1,
+  .fitness-app .MuiTypography-h1 {
+    font-size: var(--fitness-font-size-3xl);
+  }
+  
+  .fitness-card {
+    padding: var(--fitness-space-lg);
+  }
+}
+
+@media (max-width: 480px) {
+  .fitness-container {
+    padding: var(--fitness-space-md);
+  }
+  
+  .fitness-card {
+    padding: var(--fitness-space-md);
+  }
+  
+  .fitness-app .MuiButton-root {
+    padding: var(--fitness-space-sm) var(--fitness-space-lg);
+    font-size: var(--fitness-font-size-sm);
+  }
+  
+  .fitness-header {
+    padding: var(--fitness-space-md);
+  }
+}
+
+/* Loading Animation */
+@keyframes pulse-glow {
+  0% {
+    box-shadow: 0 0 5px rgba(255, 107, 53, 0.3);
+  }
+  50% {
+    box-shadow: 0 0 20px rgba(255, 107, 53, 0.6);
+  }
+  100% {
+    box-shadow: 0 0 5px rgba(255, 107, 53, 0.3);
+  }
+}
+
+.fitness-pulse {
+  animation: pulse-glow 2s infinite;
+}
