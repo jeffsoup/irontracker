@@ -32,7 +32,7 @@ function TabPanel(props: TabPanelProps) {
       {...other}
     >
       {value === index && (
-        <Box sx={{ p: 3 }}>
+        <Box sx={{ p: 0 }}>
           {children}
         </Box>
       )}
@@ -125,10 +125,10 @@ export const ExerciseTabs: React.FC<ExerciseTabsProps> = ({
     <Box sx={{ width: '100%' }}>
       <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
         <Tabs value={value} onChange={handleChange} aria-label="exercise tabs">
-          <Tab label="Add Exercise" disabled={!activeWorkout} />
-          <Tab label="Workouts" />
-          <Tab label="Exercise History" />
-          <Tab label="Charts" />
+          <Tab label="💥 Add Set" disabled={!activeWorkout} />
+          <Tab label="🏋️ Workouts" />
+          <Tab label="📊 History" />
+          <Tab label="📈 Charts" />
         </Tabs>
       </Box>
       <TabPanel value={value} index={0}>
@@ -228,4 +228,4 @@ export const AuthForm = () => {
       {error && <div style={{ color: 'red' }}>{error}</div>}
     </div>
   );
-}; 
+};

@@ -205,8 +205,21 @@ export const ExerciseList: React.FC<ExerciseListProps> = ({ onDelete, activeWork
   if (loading) return <div>Loading...</div>;
   if (error) return <div>Error: {error}</div>;
 
+  if (groupedExercises.length === 0) {
+    return (
+      <div className="fitness-empty-state">
+        <Typography variant="h3" component="h3">
+          No Exercise History
+        </Typography>
+        <Typography variant="body1">
+          Start adding exercises to see your workout history here
+        </Typography>
+      </div>
+    );
+  }
+
   return (
-    <Box sx={{ width: '100%', mt: 2 }}>
+    <Box sx={{ width: '100%', p: 4 }}>
       <Stack spacing={2} sx={{ mb: 3 }}>
         <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
           <LocalizationProvider dateAdapter={AdapterDateFns}>
@@ -465,4 +478,4 @@ export const ExerciseList: React.FC<ExerciseListProps> = ({ onDelete, activeWork
       </TableContainer>
     </Box>
   );
-}; 
+};

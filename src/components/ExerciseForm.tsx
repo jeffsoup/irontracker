@@ -195,20 +195,23 @@ export const ExerciseForm: React.FC<ExerciseFormProps> = ({ onSubmit, activeWork
 
   if (!activeWorkout) {
     return (
-      <Box sx={{ maxWidth: 400, mx: 'auto', mt: 4 }}>
-        <Typography variant="h6" color="text.secondary" align="center">
+      <div className="fitness-empty-state">
+        <Typography variant="h3" component="h3">
+          No Active Workout (YET)
+        </Typography>
+        <Typography variant="body1">
           Please start a workout to add exercises
         </Typography>
-      </Box>
+      </div>
     );
   }
 
   return (
-    <Box component="form" onSubmit={handleSubmit} sx={{ maxWidth: 400, mx: 'auto', mt: 4 }}>
-      <Typography variant="h5" gutterBottom color="text.secondary">
-        Add Set
+    <Box component="form" onSubmit={handleSubmit} sx={{ maxWidth: 500, mx: 'auto', p: 4 }} className="fitness-card">
+      <Typography variant="h2" component="h2" gutterBottom sx={{ mb: 4 }}>
+        🔥 Add New Set
       </Typography>
-      <Stack spacing={3}>
+      <Stack spacing={4}>
         <FormControl fullWidth required>
           <InputLabel>Category</InputLabel>
           <Select
@@ -300,9 +303,9 @@ export const ExerciseForm: React.FC<ExerciseFormProps> = ({ onSubmit, activeWork
           fullWidth
         />
         <Button type="submit" variant="contained" color="primary">
-          Add Set
+          💪 Add Set 💪
         </Button>
       </Stack>
     </Box>
   );
-}; 
+};
