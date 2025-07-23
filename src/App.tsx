@@ -9,8 +9,6 @@ import { supabase } from './lib/supabase';
 import { User } from '@supabase/supabase-js';
 //import { AuthForm } from './components/AuthForm';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import BuilderPage from './components/BuilderPage';
-import './builder-registry';
 
 //const LOGIN_REQUIRED = import.meta.env.VITE_LOGIN_REQUIRED === 'true';
 
@@ -189,38 +187,8 @@ function App() {
             </Box>
           </div>
         } />
-        <Route path="/builder/*" element={
-          <div
-            style={{
-              width: '100vw',
-              maxWidth: '100vw',
-              margin: 0,
-              padding: 0,
-              boxSizing: 'border-box',
-              overflowX: 'hidden',
-              minHeight: '100vh'
-            }}
-          >
-            <BuilderPage />
-          </div>
-        } />
         <Route path="/test" element={
           <div style={{ color: 'black' }}>Test Route Works</div>
-        } />
-        <Route path="/builder-demo/*" element={
-          <div
-            style={{
-              width: '100vw',
-              maxWidth: '100vw',
-              margin: 0,
-              padding: 0,
-              boxSizing: 'border-box',
-              overflowX: 'hidden',
-              minHeight: '100vh'
-            }}
-          >
-            <BuilderPage />
-          </div>
         } />
         <Route path="*" element={
           <div style={{ color: 'red', textAlign: 'center', marginTop: '2rem' }}>
