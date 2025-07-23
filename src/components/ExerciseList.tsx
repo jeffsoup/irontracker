@@ -207,7 +207,7 @@ export const ExerciseList: React.FC<ExerciseListProps> = ({ onDelete, activeWork
 
   if (groupedExercises.length === 0) {
     return (
-      <div className="minimalist-empty-state">
+      <div className="fitness-empty-state">
         <Typography variant="h3" component="h3">
           No Exercise History
         </Typography>
