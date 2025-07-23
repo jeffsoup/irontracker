@@ -11,7 +11,7 @@ import { User } from '@supabase/supabase-js';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import BuilderPage from './components/BuilderPage';
 import './builder-registry';
-import './styles/minimalist-theme.css';
+import './styles/fitness-theme.css';
 
 //const LOGIN_REQUIRED = import.meta.env.VITE_LOGIN_REQUIRED === 'true';
 
@@ -137,9 +137,9 @@ function App() {
     <Router>
       <Routes>
         <Route path="/" element={
-          <div className="minimalist-app">
-            <div className="minimalist-container">
-              <header className="minimalist-header">
+          <div className="fitness-app">
+            <div className="fitness-container">
+              <header className="fitness-header">
                 <Typography variant="h1" component="h1">
                   Exercise Tracker
                 </Typography>
@@ -158,7 +158,7 @@ function App() {
                 </Button>
               </header>
 
-              <main className="minimalist-content">
+              <main className="fitness-content">
                 <ExerciseTabs
                   onDelete={handleDeleteExercise}
                   activeWorkout={activeWorkout}
