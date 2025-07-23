@@ -195,7 +195,7 @@ export const ExerciseForm: React.FC<ExerciseFormProps> = ({ onSubmit, activeWork
 
   if (!activeWorkout) {
     return (
-      <div className="minimalist-empty-state">
+      <div className="fitness-empty-state">
         <Typography variant="h3" component="h3">
           No Active Workout
         </Typography>
@@ -207,7 +207,7 @@ export const ExerciseForm: React.FC<ExerciseFormProps> = ({ onSubmit, activeWork
   }
 
   return (
-    <Box component="form" onSubmit={handleSubmit} sx={{ maxWidth: 500, mx: 'auto', p: 4 }}>
+    <Box component="form" onSubmit={handleSubmit} sx={{ maxWidth: 500, mx: 'auto', p: 4 }} className="fitness-card">
       <Typography variant="h2" component="h2" gutterBottom sx={{ mb: 4 }}>
         Add Set
       </Typography>
