@@ -219,7 +219,7 @@ export const ExerciseList: React.FC<ExerciseListProps> = ({ onDelete, activeWork
   }
 
   return (
-    <Box sx={{ width: '100%', mt: 2 }}>
+    <Box sx={{ width: '100%', p: 4 }}>
       <Stack spacing={2} sx={{ mb: 3 }}>
         <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
           <LocalizationProvider dateAdapter={AdapterDateFns}>
