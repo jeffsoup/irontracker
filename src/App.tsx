@@ -12,6 +12,7 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import BuilderPage from './components/BuilderPage';
 import './builder-registry';
 import './styles/fitness-theme.css';
+// 🔥 BEAST MODE FITNESS THEME - LET'S CRUSH THOSE WORKOUTS! 💪
 
 //const LOGIN_REQUIRED = import.meta.env.VITE_LOGIN_REQUIRED === 'true';
 
