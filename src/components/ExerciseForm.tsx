@@ -197,7 +197,7 @@ export const ExerciseForm: React.FC<ExerciseFormProps> = ({ onSubmit, activeWork
     return (
       <div className="fitness-empty-state">
         <Typography variant="h3" component="h3">
-          No Active Workout
+          No Active Workout (YET)
         </Typography>
         <Typography variant="body1">
           Please start a workout to add exercises
