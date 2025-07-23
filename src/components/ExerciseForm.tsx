@@ -207,11 +207,11 @@ export const ExerciseForm: React.FC<ExerciseFormProps> = ({ onSubmit, activeWork
   }
 
   return (
-    <Box component="form" onSubmit={handleSubmit} sx={{ maxWidth: 400, mx: 'auto', mt: 4 }}>
-      <Typography variant="h5" gutterBottom color="text.secondary">
+    <Box component="form" onSubmit={handleSubmit} sx={{ maxWidth: 500, mx: 'auto', p: 4 }}>
+      <Typography variant="h2" component="h2" gutterBottom sx={{ mb: 4 }}>
         Add Set
       </Typography>
-      <Stack spacing={3}>
+      <Stack spacing={4}>
         <FormControl fullWidth required>
           <InputLabel>Category</InputLabel>
           <Select
