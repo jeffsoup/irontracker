@@ -11,6 +11,7 @@ import { User } from '@supabase/supabase-js';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import BuilderPage from './components/BuilderPage';
 import './builder-registry';
+import './styles/minimalist-theme.css';
 
 //const LOGIN_REQUIRED = import.meta.env.VITE_LOGIN_REQUIRED === 'true';
 
@@ -136,19 +137,10 @@ function App() {
     <Router>
       <Routes>
         <Route path="/" element={
-          <div
-            style={{
-              width: '100vw',
-              maxWidth: '100vw',
-              margin: 0,
-              padding: '0 16px',
-              boxSizing: 'border-box',
-              minHeight: '100vh'
-            }}
-          >
-            <Box sx={{ my: 4 }}>
-              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 4 }}>
-                <Typography variant="h4" component="h1">
+          <div className="minimalist-app">
+            <div className="minimalist-container">
+              <header className="minimalist-header">
+                <Typography variant="h1" component="h1">
                   Exercise Tracker
                 </Typography>
                 <Button
@@ -157,36 +149,45 @@ function App() {
                   onClick={activeWorkout ? handleFinishWorkout : () => {
                     setDialogOpen(true);
                   }}
+                  sx={{
+                    minWidth: '160px',
+                    height: '48px'
+                  }}
                 >
                   {activeWorkout ? 'Finish Workout' : 'Start Workout'}
                 </Button>
-              </Box>
-              <ExerciseTabs 
-                onDelete={handleDeleteExercise} 
-                activeWorkout={activeWorkout}
-                onShowSnackbar={showSnackbar}
-                setActiveWorkout={setActiveWorkout}
-              />
+              </header>
+
+              <main className="minimalist-content">
+                <ExerciseTabs
+                  onDelete={handleDeleteExercise}
+                  activeWorkout={activeWorkout}
+                  onShowSnackbar={showSnackbar}
+                  setActiveWorkout={setActiveWorkout}
+                />
+              </main>
+
               <WorkoutDialog
                 open={dialogOpen}
                 onClose={() => setDialogOpen(false)}
                 onStart={handleStartWorkout}
                 //user={user}
               />
+
               <Snackbar
                 open={snackbarOpen}
                 autoHideDuration={3000}
                 onClose={handleCloseSnackbar}
                 anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
               >
-                <Alert 
-                  onClose={handleCloseSnackbar} 
+                <Alert
+                  onClose={handleCloseSnackbar}
                   severity={snackbarMessage.includes('Failed') ? 'error' : 'success'}
                 >
                   {snackbarMessage}
                 </Alert>
               </Snackbar>
-            </Box>
+            </div>
           </div>
         } />
         <Route path="/builder/*" element={
