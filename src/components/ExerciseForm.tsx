@@ -195,11 +195,14 @@ export const ExerciseForm: React.FC<ExerciseFormProps> = ({ onSubmit, activeWork
 
   if (!activeWorkout) {
     return (
-      <Box sx={{ maxWidth: 400, mx: 'auto', mt: 4 }}>
-        <Typography variant="h6" color="text.secondary" align="center">
+      <div className="minimalist-empty-state">
+        <Typography variant="h3" component="h3">
+          No Active Workout
+        </Typography>
+        <Typography variant="body1">
           Please start a workout to add exercises
         </Typography>
-      </Box>
+      </div>
     );
   }
 
@@ -305,4 +308,4 @@ export const ExerciseForm: React.FC<ExerciseFormProps> = ({ onSubmit, activeWork
       </Stack>
     </Box>
   );
-}; 
+};
