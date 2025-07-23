@@ -209,7 +209,7 @@ export const ExerciseForm: React.FC<ExerciseFormProps> = ({ onSubmit, activeWork
   return (
     <Box component="form" onSubmit={handleSubmit} sx={{ maxWidth: 500, mx: 'auto', p: 4 }} className="fitness-card">
       <Typography variant="h2" component="h2" gutterBottom sx={{ mb: 4 }}>
-        Add Set
+        🔥 Add New Set
       </Typography>
       <Stack spacing={4}>
         <FormControl fullWidth required>
@@ -303,7 +303,7 @@ export const ExerciseForm: React.FC<ExerciseFormProps> = ({ onSubmit, activeWork
           fullWidth
         />
         <Button type="submit" variant="contained" color="primary">
-          Add Set
+          💪 Add Set
         </Button>
       </Stack>
     </Box>
