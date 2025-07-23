@@ -67,7 +67,7 @@ export const WorkoutDialog: React.FC<WorkoutDialogProps> = ({
       <DialogTitle>Start New Workout</DialogTitle>
       <DialogContent>
         <Box sx={{ mt: 2 }}>
-          <Typography gutterBottom>
+          <Typography variant="body1" gutterBottom>
             What will you be exercising in this workout?
           </Typography>
           <FormControl fullWidth sx={{ mt: 2 }}>
@@ -113,4 +113,4 @@ export const WorkoutDialog: React.FC<WorkoutDialogProps> = ({
       </DialogActions>
     </Dialog>
   );
-}; 
+};
