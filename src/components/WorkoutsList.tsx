@@ -73,9 +73,22 @@ export const WorkoutsList: React.FC<WorkoutsListProps> = ({ activeWorkout, onRes
   if (loading) return <div>Loading...</div>;
   if (error) return <div>Error: {error}</div>;
 
+  if (workouts.length === 0) {
+    return (
+      <div className="minimalist-empty-state">
+        <Typography variant="h3" component="h3">
+          No Workouts Yet
+        </Typography>
+        <Typography variant="body1">
+          Start your first workout to see your workout history here
+        </Typography>
+      </div>
+    );
+  }
+
   return (
-    <Box sx={{ width: '100%', mt: 2 }}>
-      <Typography variant="h6" sx={{ mb: 2 }}>All Workouts</Typography>
+    <Box sx={{ width: '100%', p: 4 }}>
+      <Typography variant="h2" component="h2" sx={{ mb: 4 }}>All Workouts</Typography>
       <TableContainer component={Paper} elevation={0}>
         <Table>
           <TableHead>
@@ -141,4 +154,4 @@ export const WorkoutsList: React.FC<WorkoutsListProps> = ({ activeWorkout, onRes
       </Dialog>
     </Box>
   );
-}; 
+};
