@@ -10,6 +10,7 @@ import { User } from '@supabase/supabase-js';
 //import { AuthForm } from './components/AuthForm';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 
+
 //const LOGIN_REQUIRED = import.meta.env.VITE_LOGIN_REQUIRED === 'true';
 
 function App() {
@@ -134,57 +135,76 @@ function App() {
     <Router>
       <Routes>
         <Route path="/" element={
-          <div
-            style={{
-              width: '100vw',
-              maxWidth: '100vw',
-              margin: 0,
-              padding: '0 16px',
-              boxSizing: 'border-box',
-              minHeight: '100vh'
-            }}
-          >
-            <Box sx={{ my: 4 }}>
-              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 4 }}>
-                <Typography variant="h4" component="h1">
-                  Exercise Tracker
-                </Typography>
+          <div className="fitness-app">
+            <div className="fitness-container">
+              <header className="fitness-header">
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                  <Typography variant="h1" component="h1">
+                    💪 IronTracker
+                  </Typography>
+                  {activeWorkout && (
+                    <Box sx={{
+                      background: 'linear-gradient(45deg, #00ff88, #00d4ff)',
+                      padding: '4px 12px',
+                      borderRadius: '20px',
+                      fontSize: '0.75rem',
+                      fontWeight: 'bold',
+                      color: '#0a0a0a',
+                      textTransform: 'uppercase',
+                      letterSpacing: '0.05em',
+                      animation: 'pulse-glow 2s infinite'
+                    }}>
+                      🔥 WORKOUT ACTIVE
+                    </Box>
+                  )}
+                </Box>
                 <Button
                   variant="contained"
                   color={activeWorkout ? 'secondary' : 'primary'}
                   onClick={activeWorkout ? handleFinishWorkout : () => {
                     setDialogOpen(true);
                   }}
+                  sx={{
+                    minWidth: '180px',
+                    height: '56px',
+                    fontSize: '1rem',
+                    fontWeight: 'bold'
+                  }}
                 >
-                  {activeWorkout ? 'Finish Workout' : 'Start Workout'}
+                  {activeWorkout ? '🏁 FINISH WORKOUT' : '🚀 START WORKOUT'}
                 </Button>
-              </Box>
-              <ExerciseTabs 
-                onDelete={handleDeleteExercise} 
-                activeWorkout={activeWorkout}
-                onShowSnackbar={showSnackbar}
-                setActiveWorkout={setActiveWorkout}
-              />
+              </header>
+
+              <main className="fitness-content">
+                <ExerciseTabs
+                  onDelete={handleDeleteExercise}
+                  activeWorkout={activeWorkout}
+                  onShowSnackbar={showSnackbar}
+                  setActiveWorkout={setActiveWorkout}
+                />
+              </main>
+
               <WorkoutDialog
                 open={dialogOpen}
                 onClose={() => setDialogOpen(false)}
                 onStart={handleStartWorkout}
                 //user={user}
               />
+
               <Snackbar
                 open={snackbarOpen}
                 autoHideDuration={3000}
                 onClose={handleCloseSnackbar}
                 anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
               >
-                <Alert 
-                  onClose={handleCloseSnackbar} 
+                <Alert
+                  onClose={handleCloseSnackbar}
                   severity={snackbarMessage.includes('Failed') ? 'error' : 'success'}
                 >
                   {snackbarMessage}
                 </Alert>
               </Snackbar>
-            </Box>
+            </div>
           </div>
         } />
         <Route path="/test" element={
