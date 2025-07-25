@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Container, Typography, Box, Snackbar, Alert, Button } from '@mui/material'
+import { Typography, Box, Snackbar, Alert, Button } from '@mui/material'
 import { ExerciseTabs } from './components/ExerciseTabs'
 import { WorkoutDialog } from './components/WorkoutDialog'
 import { exerciseService } from './services/exerciseService'
@@ -122,7 +122,7 @@ function App() {
     }
   }
 
-  const showSnackbar = (message: string, severity: 'success' | 'error' = 'success') => {
+  const showSnackbar = (message: string, _severity: 'success' | 'error' = 'success') => {
     setSnackbarMessage(message)
     setSnackbarOpen(true)
   }
