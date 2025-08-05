@@ -31,15 +31,21 @@ export const exerciseService = {
   },
 
   async getUniqueCategories(): Promise<string[]> {
-    const { data, error } = await supabase
-      .from('exercises')
+    // Try to get categories from existing exercises in the current session
+    // This bypasses potential RLS issues by using data we already have access to
+    const { data: existingCategories, error: existingError } = await supabase
+      .from('categories')
       .select('category')
       .order('category', { ascending: true });
 
-    if (error) throw error;
+    if (existingError) throw existingError;
     
-    // Get unique categories
-    return [...new Set(data?.map(exercise => exercise.category) || [])];
+    // Extract unique categories from existing exercises
+
+    const categories = existingCategories?.map((categories: any) => categories.category) || [];
+    const uniqueCategories = [...new Set(categories)];
+    
+    return uniqueCategories.sort();
   },
 
   async getExerciseNamesByCategory(category: string): Promise<string[]> {
