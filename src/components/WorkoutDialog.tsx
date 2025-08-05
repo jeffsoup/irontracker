@@ -35,13 +35,17 @@ export const WorkoutDialog: React.FC<WorkoutDialogProps> = ({
   const [availableCategories, setAvailableCategories] = useState<string[]>([]);
   
   useEffect(() => {
-    exerciseService.getUniqueCategories()
-      .then(cats => setAvailableCategories(cats))
-      .catch(error => {
-        console.error('Error fetching categories:', error);
-        setAvailableCategories([]);
-      });
-  }, []);
+    if (open) {
+      exerciseService.getUniqueCategories()
+        .then(cats => {
+          setAvailableCategories(cats);
+        })
+        .catch(error => {
+          console.error('Error fetching categories:', error);
+          setAvailableCategories([]);
+        });
+    }
+  }, [open]);
 
   const handleChange = (event: SelectChangeEvent<string[]>) => {
     const value = event.target.value;
