@@ -1,8 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Box, Tab, Tabs } from '@mui/material';
 import { ExerciseForm } from './ExerciseForm';
 import { ExerciseList } from './ExerciseList';
 import { WorkoutsList } from './WorkoutsList';
+import { ChartsComponent } from './ChartsComponent';
+import { Home } from './Home';
 import { ExerciseFormData, Workout } from '../types/Exercise';
 import { exerciseService } from '../services/exerciseService';
 import { supabase } from '../lib/supabase';
@@ -47,39 +49,10 @@ export const ExerciseTabs: React.FC<ExerciseTabsProps> = ({
   setActiveWorkout
 }) => {
   const [value, setValue] = useState(0);
-  const [dashboardUrl, setDashboardUrl] = useState<string>('');
-  const [dashboardLoading, setDashboardLoading] = useState(false);
-  const [refreshKey, setRefreshKey] = useState(0);
 
   const handleChange = (_: React.SyntheticEvent, newValue: number) => {
     setValue(newValue);
   };
-
-  useEffect(() => {
-    if (value === 3) {
-      const apiDomain = import.meta.env.VITE_DASHBOARD_API_DOMAIN;
-      if (!apiDomain) {
-        onShowSnackbar('Dashboard API domain is not set', 'error');
-        return;
-      }
-      setDashboardLoading(true);
-      fetch(`${apiDomain}/mb-url`, { credentials: 'include' })
-        .then(res => {
-          if (!res.ok) throw new Error('Failed to fetch dashboard URL');
-          return res.json();
-        })
-        .then(data => {
-          setDashboardUrl(data.url);
-        })
-        .catch(err => {
-          setDashboardUrl('');
-          onShowSnackbar('Failed to load dashboard', 'error');
-        })
-        .finally(() => {
-          setDashboardLoading(false);
-        });
-    }
-  }, [value, refreshKey, onShowSnackbar]);
 
   const handleAddExercise = async (exerciseData: ExerciseFormData) => {
     if (!activeWorkout) {
@@ -125,6 +98,7 @@ export const ExerciseTabs: React.FC<ExerciseTabsProps> = ({
     <Box sx={{ width: '100%' }}>
       <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
         <Tabs value={value} onChange={handleChange} aria-label="exercise tabs">
+          <Tab label="🏠 Home" />
           <Tab label="💥 Add Set" disabled={!activeWorkout} />
           <Tab label="🏋️ Workouts" />
           <Tab label="📊 History" />
@@ -132,45 +106,26 @@ export const ExerciseTabs: React.FC<ExerciseTabsProps> = ({
         </Tabs>
       </Box>
       <TabPanel value={value} index={0}>
+        <Home />
+      </TabPanel>
+      <TabPanel value={value} index={1}>
         <ExerciseForm 
           onSubmit={handleAddExercise} 
           activeWorkout={activeWorkout}
         />
       </TabPanel>
-      <TabPanel value={value} index={1}>
+      <TabPanel value={value} index={2}>
         <WorkoutsList 
           activeWorkout={activeWorkout} 
           onResume={handleResumeWorkout} 
           onDelete={handleDeleteWorkout}
         />
       </TabPanel>
-      <TabPanel value={value} index={2}>
+      <TabPanel value={value} index={3}>
         <ExerciseList onDelete={onDelete} activeWorkout={activeWorkout} />
       </TabPanel>
-      <TabPanel value={value} index={3}>
-        <Box sx={{ width: '100%', height: '70vh', p: 0 }}>
-          {dashboardLoading ? (
-            <div>Loading dashboard...</div>
-          ) : dashboardUrl ? (
-            <iframe
-              key={dashboardUrl}
-              title="Your Data"
-              src={dashboardUrl}
-              width="100%"
-              height="100%"
-              style={{ border: 0 }}
-              allowFullScreen
-              onError={() => {
-                setDashboardUrl('');
-                setDashboardLoading(true);
-                setRefreshKey(prev => prev + 1);
-                onShowSnackbar('Session expired. Refreshing dashboard...', 'error');
-              }}
-            />
-          ) : !dashboardLoading ? (
-            <div>Dashboard unavailable.</div>
-          ) : null}
-        </Box>
+      <TabPanel value={value} index={4}>
+        <ChartsComponent />
       </TabPanel>
     </Box>
   );

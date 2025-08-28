@@ -86,6 +86,43 @@ export const exerciseService = {
       .map(([name, lastUsed]) => ({ name, lastUsed }));
   },
 
+  async getProgressionData(category?: string): Promise<any[]> {
+    let query = supabase
+      .from('progression_max')
+      .select('category, name, weight, reps, date')
+      .order('date', { ascending: true });
+    
+    if (category) {
+      query = query.eq('category', category);
+    }
+
+    const { data, error } = await query;
+
+    if (error) throw error;
+    
+    return data?.map(item => ({
+      ...item,
+      date: item.date ? new Date(item.date) : null
+    })) || [];
+  },
+
+  async getExerciseUsageData(category?: string): Promise<any[]> {
+    let query = supabase
+      .from('exercise_usage')
+      .select('name, total, category')
+      .order('total', { ascending: false });
+    
+    if (category && category !== 'All') {
+      query = query.eq('category', category);
+    }
+
+    const { data, error } = await query;
+
+    if (error) throw error;
+    
+    return data || [];
+  },
+
   async addExercise(exercise: ExerciseFormData): Promise<Exercise> {
     console.log('Adding exercise:', exercise);
     const { data, error } = await supabase
