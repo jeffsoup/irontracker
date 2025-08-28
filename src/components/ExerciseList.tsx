@@ -30,7 +30,7 @@ import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ExpandLessIcon from '@mui/icons-material/ExpandLess';
 import { Exercise } from '../types/Exercise';
 import { exerciseService } from '../services/exerciseService';
-import { format, isEqual } from 'date-fns';
+import { format } from 'date-fns';
 
 interface ExerciseListProps {
   onDelete: (id: string) => void;
@@ -148,6 +148,24 @@ export const ExerciseList: React.FC<ExerciseListProps> = ({ onDelete, activeWork
       ...prev,
       [field]: value
     }));
+
+    // Auto-expand dates when a category is selected so users can see the history for that category
+    if (field === 'category' && typeof value === 'string') {
+      const selectedCategory = value.trim();
+      if (selectedCategory) {
+        const newExpanded: { [date: string]: boolean } = {};
+        exercises.forEach(exercise => {
+          if (
+            exercise.date &&
+            exercise.category &&
+            exercise.category.toLowerCase().includes(selectedCategory.toLowerCase())
+          ) {
+            newExpanded[exercise.date.toDateString()] = true;
+          }
+        });
+        setExpandedDates(newExpanded);
+      }
+    }
   };
 
   const getUniqueCategories = () => {
@@ -328,6 +346,8 @@ export const ExerciseList: React.FC<ExerciseListProps> = ({ onDelete, activeWork
                               label={cat}
                               size="small"
                               variant="outlined"
+                              clickable
+                              onClick={(e) => { e.stopPropagation(); handleFilterChange('category', cat); }}
                               sx={{ fontSize: '0.75rem' }}
                             />
                           ))}

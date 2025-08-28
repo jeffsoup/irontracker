@@ -72,4 +72,47 @@ export const workoutService = {
     const { error } = await supabase.from('workouts').delete().eq('id', id);
     if (error) throw error;
   },
+
+  async getLastCompletedWorkout(): Promise<any[]> {
+    try {
+      // Get all exercises ordered by workout ID descending, then filter to only the first workout's exercises
+      const { data, error } = await supabase
+        .from('exercises')
+        .select(`
+          name,
+          category,
+          reps,
+          weight,
+          workout,
+          workouts!inner(
+            categories
+          )
+        `)
+        .order('workout', { ascending: false })
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      
+      if (!data || data.length === 0) {
+        return [];
+      }
+
+      // Get the most recent workout ID from the first result
+      const mostRecentWorkoutId = data[0].workout;
+      
+      // Filter to only exercises from that workout
+      const lastWorkoutExercises = data.filter(exercise => exercise.workout === mostRecentWorkoutId);
+      
+      return lastWorkoutExercises.map(item => ({
+        name: item.name,
+        category: item.category,
+        reps: item.reps,
+        weight: item.weight,
+        categories: (item.workouts as any)?.categories || []
+      }));
+    } catch (error) {
+      console.error('Error in getLastCompletedWorkout:', error);
+      return [];
+    }
+  },
 }; 
