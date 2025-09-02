@@ -9,6 +9,7 @@ import { supabase } from './lib/supabase';
 import { User } from '@supabase/supabase-js';
 //import { AuthForm } from './components/AuthForm';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { Analytics } from "@vercel/analytics/react"
 
 
 //const LOGIN_REQUIRED = import.meta.env.VITE_LOGIN_REQUIRED === 'true';
@@ -133,6 +134,7 @@ function App() {
 
   return (
     <Router>
+      <Analytics />
       <Routes>
         <Route path="/" element={
           <div className="fitness-app">
