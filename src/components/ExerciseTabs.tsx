@@ -97,7 +97,14 @@ export const ExerciseTabs: React.FC<ExerciseTabsProps> = ({
   return (
     <Box sx={{ width: '100%' }}>
       <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
-        <Tabs value={value} onChange={handleChange} aria-label="exercise tabs">
+        <Tabs 
+          value={value} 
+          onChange={handleChange} 
+          aria-label="exercise tabs"
+          variant="scrollable"
+          scrollButtons="auto"
+          allowScrollButtonsMobile
+        >
           <Tab label="🏠 Home" />
           <Tab label="💥 Add Set" disabled={!activeWorkout} />
           <Tab label="🏋️ Workouts" />
