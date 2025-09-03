@@ -5,6 +5,7 @@ import { ExerciseList } from './ExerciseList';
 import { WorkoutsList } from './WorkoutsList';
 import { ChartsComponent } from './ChartsComponent';
 import { Home } from './Home';
+import { Profile } from './Profile';
 import { ExerciseFormData, Workout } from '../types/Exercise';
 import { exerciseService } from '../services/exerciseService';
 import { supabase } from '../lib/supabase';
@@ -110,6 +111,7 @@ export const ExerciseTabs: React.FC<ExerciseTabsProps> = ({
           <Tab label="🏋️ Workouts" />
           <Tab label="📊 History" />
           <Tab label="📈 Charts" />
+          <Tab label="👤 Profile" />
         </Tabs>
       </Box>
       <TabPanel value={value} index={0}>
@@ -133,6 +135,9 @@ export const ExerciseTabs: React.FC<ExerciseTabsProps> = ({
       </TabPanel>
       <TabPanel value={value} index={4}>
         <ChartsComponent />
+      </TabPanel>
+      <TabPanel value={value} index={5}>
+        <Profile />
       </TabPanel>
     </Box>
   );
