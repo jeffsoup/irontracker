@@ -141,7 +141,7 @@ export const AuthForm: React.FC = () => {
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: `${window.location.origin}/`,
+          redirectTo: import.meta.env.VITE_AUTH_REDIRECT_URL || `${window.location.origin}/`,
           queryParams: {
             access_type: 'offline',
             prompt: 'consent'
@@ -165,7 +165,7 @@ export const AuthForm: React.FC = () => {
 
     try {
       const { error } = await supabase.auth.resetPasswordForEmail(resetEmail, {
-        redirectTo: `${window.location.origin}/reset-password`
+        redirectTo: import.meta.env.VITE_AUTH_REDIRECT_URL || `${window.location.origin}/reset-password`
       });
 
       if (error) throw error;
