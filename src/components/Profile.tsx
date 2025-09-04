@@ -15,8 +15,7 @@ import { supabase } from '../lib/supabase';
 import { User } from '@supabase/supabase-js';
 
 interface ProfileData {
-  first_name: string;
-  last_name: string;
+  display_name: string;
   email: string;
 }
 
@@ -28,8 +27,7 @@ export const Profile: React.FC = () => {
   const [success, setSuccess] = useState<string | null>(null);
   
   const [profileData, setProfileData] = useState<ProfileData>({
-    first_name: '',
-    last_name: '',
+    display_name: '',
     email: ''
   });
 
@@ -41,8 +39,7 @@ export const Profile: React.FC = () => {
         
         if (user) {
           setProfileData({
-            first_name: user.user_metadata?.first_name || '',
-            last_name: user.user_metadata?.last_name || '',
+            display_name: user.user_metadata?.display_name || '',
             email: user.email || ''
           });
         }
@@ -65,9 +62,7 @@ export const Profile: React.FC = () => {
     try {
       const { error } = await supabase.auth.updateUser({
         data: {
-          first_name: profileData.first_name,
-          last_name: profileData.last_name,
-          full_name: `${profileData.first_name} ${profileData.last_name}`
+          display_name: profileData.display_name
         }
       });
 
@@ -167,12 +162,12 @@ export const Profile: React.FC = () => {
                 mr: 3
               }}
             >
-              {profileData.first_name?.[0]?.toUpperCase() || user.email?.[0]?.toUpperCase()}
+              {profileData.display_name?.[0]?.toUpperCase() || user.email?.[0]?.toUpperCase()}
             </Avatar>
             <Box>
               <Typography variant="h6" fontWeight="bold">
-                {profileData.first_name && profileData.last_name 
-                  ? `${profileData.first_name} ${profileData.last_name}`
+                {profileData.display_name 
+                  ? `${profileData.display_name}`
                   : user.email
                 }
               </Typography>
@@ -186,16 +181,9 @@ export const Profile: React.FC = () => {
             <Box sx={{ display: 'flex', gap: 2, mb: 3 }}>
               <TextField
                 fullWidth
-                label="First Name"
-                value={profileData.first_name}
-                onChange={(e) => setProfileData({ ...profileData, first_name: e.target.value })}
-                margin="normal"
-              />
-              <TextField
-                fullWidth
-                label="Last Name"
-                value={profileData.last_name}
-                onChange={(e) => setProfileData({ ...profileData, last_name: e.target.value })}
+                label="Name"
+                value={profileData.display_name}
+                onChange={(e) => setProfileData({ ...profileData, display_name: e.target.value })}
                 margin="normal"
               />
             </Box>
@@ -251,9 +239,6 @@ export const Profile: React.FC = () => {
           <Divider sx={{ my: 3 }} />
 
           <Box>
-            <Typography variant="h6" sx={{ mb: 2 }}>
-              Danger Zone
-            </Typography>
             <Button
               variant="outlined"
               color="error"

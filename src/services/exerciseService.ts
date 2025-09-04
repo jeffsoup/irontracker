@@ -8,6 +8,11 @@ interface RecommendedExercise {
 
 export const exerciseService = {
   async getExercises(): Promise<Exercise[]> {
+    // Get the current user
+    const { data: { user }, error: userError } = await supabase.auth.getUser();
+    if (userError) throw userError;
+    if (!user) throw new Error('User must be authenticated to get exercises');
+    
     const { data, error } = await supabase
       .from('exercises')
       .select(`
@@ -16,6 +21,7 @@ export const exerciseService = {
           categories
         )
       `)
+      .eq('user_id', user.id)
       .order('date', { ascending: false })
       .order('category', { ascending: true })
       .order('name', { ascending: true });
@@ -49,10 +55,16 @@ export const exerciseService = {
   },
 
   async getExerciseNamesByCategory(category: string): Promise<string[]> {
+    // Get the current user
+    const { data: { user }, error: userError } = await supabase.auth.getUser();
+    if (userError) throw userError;
+    if (!user) throw new Error('User must be authenticated to get exercises');
+    
     const { data, error } = await supabase
       .from('exercises')
       .select('name')
       .eq('category', category)
+      .eq('user_id', user.id)
       .order('name', { ascending: true });
 
     if (error) throw error;
@@ -62,10 +74,16 @@ export const exerciseService = {
   },
 
   async getRecommendedExercises(category: string): Promise<RecommendedExercise[]> {
+    // Get the current user
+    const { data: { user }, error: userError } = await supabase.auth.getUser();
+    if (userError) throw userError;
+    if (!user) throw new Error('User must be authenticated to get exercises');
+    
     const { data, error } = await supabase
       .from('exercises')
       .select('name, date')
       .eq('category', category)
+      .eq('user_id', user.id)
       .order('date', { ascending: true });
 
     if (error) throw error;
@@ -125,9 +143,21 @@ export const exerciseService = {
 
   async addExercise(exercise: ExerciseFormData): Promise<Exercise> {
     console.log('Adding exercise:', exercise);
+    
+    // Get the current user
+    const { data: { user }, error: userError } = await supabase.auth.getUser();
+    if (userError) throw userError;
+    if (!user) throw new Error('User must be authenticated to add exercises');
+    
+    // Add userId to the exercise data
+    const exerciseWithUserId = {
+      ...exercise,
+      user_id: user.id
+    };
+    
     const { data, error } = await supabase
       .from('exercises')
-      .insert([exercise])
+      .insert([exerciseWithUserId])
       .select()
       .single();
 
@@ -141,10 +171,17 @@ export const exerciseService = {
 
   async deleteExercise(id: string): Promise<void> {
     console.log('Deleting exercise with id:', id);
+    
+    // Get the current user
+    const { data: { user }, error: userError } = await supabase.auth.getUser();
+    if (userError) throw userError;
+    if (!user) throw new Error('User must be authenticated to delete exercises');
+    
     const { error } = await supabase
       .from('exercises')
       .delete()
-      .eq('id', id);
+      .eq('id', id)
+      .eq('user_id', user.id);
 
     if (error) {
       console.error('Supabase delete error:', error);
@@ -165,6 +202,11 @@ export const exerciseService = {
   },
 
   async updateExercise(id: string, exercise: Partial<Exercise>): Promise<Exercise> {
+    // Get the current user
+    const { data: { user }, error: userError } = await supabase.auth.getUser();
+    if (userError) throw userError;
+    if (!user) throw new Error('User must be authenticated to update exercises');
+    
     // Convert date to ISO string if it exists
     const formattedExercise = {
       ...exercise,
@@ -175,6 +217,7 @@ export const exerciseService = {
       .from('exercises')
       .update(formattedExercise)
       .eq('id', id)
+      .eq('user_id', user.id)
       .select()
       .single();
 
