@@ -2,35 +2,33 @@ import { useState, useEffect } from 'react'
 import { Typography, Box, Snackbar, Alert, Button } from '@mui/material'
 import { ExerciseTabs } from './components/ExerciseTabs'
 import { WorkoutDialog } from './components/WorkoutDialog'
+import { AuthForm } from './components/AuthForm'
 import { exerciseService } from './services/exerciseService'
 import { workoutService } from './services/workoutService'
 import { Exercise, Workout } from './types/Exercise'
 import { supabase } from './lib/supabase';
 import { User } from '@supabase/supabase-js';
-//import { AuthForm } from './components/AuthForm';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { Analytics } from "@vercel/analytics/react"
-
-
-//const LOGIN_REQUIRED = import.meta.env.VITE_LOGIN_REQUIRED === 'true';
 
 function App() {
 
   const [user, setUser] = useState<User | null>(null);
-
-  // if (LOGIN_REQUIRED && !user) {
-  //   return <AuthForm />;
-  // }
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     // Listen for auth state changes
     const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
       setUser(session?.user ?? null);
+      setLoading(false);
     });
+    
     // Check initial session
     supabase.auth.getSession().then(({ data: { session } }) => {
       setUser(session?.user ?? null);
+      setLoading(false);
     });
+    
     return () => {
       listener.subscription.unsubscribe();
     };
@@ -132,90 +130,114 @@ function App() {
     setSnackbarOpen(false)
   }
 
+  if (loading) {
+    return (
+      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
+        <Typography>Loading...</Typography>
+      </Box>
+    );
+  }
+
   return (
     <Router>
       <Analytics />
       <Routes>
+        <Route path="/signin" element={
+          user ? <Navigate to="/" replace /> : <AuthForm />
+        } />
         <Route path="/" element={
-          <div className="fitness-app">
-            <div className="fitness-container">
-              <header className="fitness-header">
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                  <Typography variant="h1" component="h1">
-                    💪 IronTracker
-                  </Typography>
-                  {activeWorkout && (
-                    <Box sx={{
-                      background: 'linear-gradient(45deg, #00ff88, #00d4ff)',
-                      padding: '4px 12px',
-                      borderRadius: '20px',
-                      fontSize: '0.75rem',
-                      fontWeight: 'bold',
-                      color: '#0a0a0a',
-                      textTransform: 'uppercase',
-                      letterSpacing: '0.05em',
-                      animation: 'pulse-glow 2s infinite'
-                    }}>
-                      🔥 WORKOUT ACTIVE
-                    </Box>
-                  )}
-                </Box>
-                <Button
-                  variant="contained"
-                  color={activeWorkout ? 'secondary' : 'primary'}
-                  onClick={activeWorkout ? handleFinishWorkout : () => {
-                    setDialogOpen(true);
-                  }}
-                  sx={{
-                    minWidth: '180px',
-                    height: '56px',
-                    fontSize: '1rem',
-                    fontWeight: 'bold'
-                  }}
-                >
-                  {activeWorkout ? '🏁 FINISH WORKOUT' : '🚀 START WORKOUT'}
-                </Button>
-              </header>
+          user ? (
+            <div className="fitness-app">
+              <div className="fitness-container">
+                <header className="fitness-header">
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                    <Typography variant="h1" component="h1">
+                      💪 IronTracker
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary">
+                      Welcome, {user.email}
+                    </Typography>
+                    {activeWorkout && (
+                      <Box sx={{
+                        background: 'linear-gradient(45deg, #00ff88, #00d4ff)',
+                        padding: '4px 12px',
+                        borderRadius: '20px',
+                        fontSize: '0.75rem',
+                        fontWeight: 'bold',
+                        color: '#0a0a0a',
+                        textTransform: 'uppercase',
+                        letterSpacing: '0.05em',
+                        animation: 'pulse-glow 2s infinite'
+                      }}>
+                        🔥 WORKOUT ACTIVE
+                      </Box>
+                    )}
+                  </Box>
+                  <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
+                    <Button
+                      variant="contained"
+                      color={activeWorkout ? 'secondary' : 'primary'}
+                      onClick={activeWorkout ? handleFinishWorkout : () => {
+                        setDialogOpen(true);
+                      }}
+                      sx={{
+                        minWidth: '180px',
+                        height: '56px',
+                        fontSize: '1rem',
+                        fontWeight: 'bold'
+                      }}
+                    >
+                      {activeWorkout ? '🏁 FINISH WORKOUT' : '🚀 START WORKOUT'}
+                    </Button>
+                    <Button
+                      variant="outlined"
+                      onClick={() => supabase.auth.signOut()}
+                      sx={{ height: '56px' }}
+                    >
+                      Sign Out
+                    </Button>
+                  </Box>
+                </header>
 
-              <main className="fitness-content">
-                <ExerciseTabs
-                  onDelete={handleDeleteExercise}
-                  activeWorkout={activeWorkout}
-                  onShowSnackbar={showSnackbar}
-                  setActiveWorkout={setActiveWorkout}
+                <main className="fitness-content">
+                  <ExerciseTabs
+                    onDelete={handleDeleteExercise}
+                    activeWorkout={activeWorkout}
+                    onShowSnackbar={showSnackbar}
+                    setActiveWorkout={setActiveWorkout}
+                  />
+                </main>
+
+                <WorkoutDialog
+                  open={dialogOpen}
+                  onClose={() => setDialogOpen(false)}
+                  onStart={handleStartWorkout}
                 />
-              </main>
 
-              <WorkoutDialog
-                open={dialogOpen}
-                onClose={() => setDialogOpen(false)}
-                onStart={handleStartWorkout}
-                //user={user}
-              />
-
-              <Snackbar
-                open={snackbarOpen}
-                autoHideDuration={3000}
-                onClose={handleCloseSnackbar}
-                anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
-              >
-                <Alert
+                <Snackbar
+                  open={snackbarOpen}
+                  autoHideDuration={3000}
                   onClose={handleCloseSnackbar}
-                  severity={snackbarMessage.includes('Failed') ? 'error' : 'success'}
+                  anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
                 >
-                  {snackbarMessage}
-                </Alert>
-              </Snackbar>
+                  <Alert
+                    onClose={handleCloseSnackbar}
+                    severity={snackbarMessage.includes('Failed') ? 'error' : 'success'}
+                  >
+                    {snackbarMessage}
+                  </Alert>
+                </Snackbar>
+              </div>
             </div>
-          </div>
+          ) : (
+            <Navigate to="/signin" replace />
+          )
         } />
         <Route path="/test" element={
           <div style={{ color: 'black' }}>Test Route Works</div>
         } />
         <Route path="*" element={
-          <div style={{ color: 'red', textAlign: 'center', marginTop: '2rem' }}>
-            404 - Page Not Found
-          </div>
+          <Navigate to="/" replace />
         } />
       </Routes>
     </Router>
