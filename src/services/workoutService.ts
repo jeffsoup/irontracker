@@ -1,8 +1,10 @@
 import { supabase } from '../lib/supabase';
 import { Workout } from '../types/Exercise';
+import { getSupabase } from '../lib/supabase';
 
 export const workoutService = {
   async getActiveWorkout(): Promise<Workout | null> {
+    const supabase = getSupabase();
     const { data, error } = await supabase
       .from('workouts')
       .select('*')
@@ -20,6 +22,7 @@ export const workoutService = {
   },
 
   async createWorkout(categories: string[]): Promise<Workout> {
+    const supabase = getSupabase();
     const { data, error } = await supabase
       .from('workouts')
       .insert([{
@@ -41,6 +44,7 @@ export const workoutService = {
   },
 
   async finishWorkout(id: string): Promise<void> {
+    const supabase = getSupabase();
     const { error } = await supabase
       .from('workouts')
       .update({ 
@@ -53,6 +57,7 @@ export const workoutService = {
   },
 
   async getAllWorkouts(): Promise<Workout[]> {
+    const supabase = getSupabase();
     const { data, error } = await supabase
       .from('workouts')
       .select('*')
@@ -66,6 +71,7 @@ export const workoutService = {
   },
 
   async deleteWorkout(id: string): Promise<void> {
+    const supabase = getSupabase();
     // Delete all exercises associated with this workout (if not using ON DELETE CASCADE)
     await supabase.from('exercises').delete().eq('workout', id);
     // Delete the workout itself
@@ -75,6 +81,7 @@ export const workoutService = {
 
   async getLastCompletedWorkout(): Promise<any[]> {
     try {
+      const supabase = getSupabase();
       // Get all exercises ordered by workout ID descending, then filter to only the first workout's exercises
       const { data, error } = await supabase
         .from('exercises')
@@ -115,4 +122,4 @@ export const workoutService = {
       return [];
     }
   },
-}; 
+};
