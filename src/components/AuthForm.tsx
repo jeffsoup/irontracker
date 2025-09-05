@@ -13,7 +13,7 @@ import {
   Divider,
   Link
 } from '@mui/material';
-import { supabase } from '../lib/supabase';
+import { getSupabase } from '../lib/supabase';
 
 interface TabPanelProps {
   children?: React.ReactNode;
@@ -84,6 +84,7 @@ export const AuthForm: React.FC = () => {
     }
 
     try {
+      const supabase = getSupabase();
       const { data, error } = await supabase.auth.signUp({
         email: signUpData.email,
         password: signUpData.password,
@@ -118,6 +119,7 @@ export const AuthForm: React.FC = () => {
     setSuccess(null);
 
     try {
+      const supabase = getSupabase();
       const { error } = await supabase.auth.signInWithPassword({
         email: signInData.email,
         password: signInData.password
@@ -138,6 +140,7 @@ export const AuthForm: React.FC = () => {
     setSuccess(null);
 
     try {
+      const supabase = getSupabase();
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
@@ -164,6 +167,7 @@ export const AuthForm: React.FC = () => {
     setSuccess(null);
 
     try {
+      const supabase = getSupabase();
       const { error } = await supabase.auth.resetPasswordForEmail(resetEmail, {
         redirectTo: import.meta.env.VITE_AUTH_REDIRECT_URL || `${window.location.origin}/reset-password`
       });
