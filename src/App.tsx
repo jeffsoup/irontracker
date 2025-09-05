@@ -6,7 +6,7 @@ import { AuthForm } from './components/AuthForm'
 import { exerciseService } from './services/exerciseService'
 import { workoutService } from './services/workoutService'
 import { Exercise, Workout } from './types/Exercise'
-import { supabase } from './lib/supabase';
+import { getSupabase } from './lib/supabase';
 import { User } from '@supabase/supabase-js';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { Analytics } from "@vercel/analytics/react"
@@ -17,18 +17,26 @@ function App() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    const url = import.meta.env.VITE_SUPABASE_URL as string | undefined;
+    const key = import.meta.env.VITE_SUPABASE_ANON_KEY as string | undefined;
+    if (!url || !key) {
+      setLoading(false);
+      return;
+    }
+
+    const supabase = getSupabase();
     // Listen for auth state changes
     const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
       setUser(session?.user ?? null);
       setLoading(false);
     });
-    
+
     // Check initial session
     supabase.auth.getSession().then(({ data: { session } }) => {
       setUser(session?.user ?? null);
       setLoading(false);
     });
-    
+
     return () => {
       listener.subscription.unsubscribe();
     };
@@ -138,6 +146,15 @@ function App() {
     );
   }
 
+  const envMissing = !(import.meta.env.VITE_SUPABASE_URL && import.meta.env.VITE_SUPABASE_ANON_KEY);
+  if (envMissing) {
+    return (
+      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', p: 3 }}>
+        <Typography color="error">Supabase is not configured. Please set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY.</Typography>
+      </Box>
+    );
+  }
+
   return (
     <Router>
       <Analytics />
@@ -191,7 +208,7 @@ function App() {
                     </Button>
                     <Button
                       variant="outlined"
-                      onClick={() => supabase.auth.signOut()}
+                      onClick={() => getSupabase().auth.signOut()}
                       sx={{ height: '56px' }}
                     >
                       Sign Out
