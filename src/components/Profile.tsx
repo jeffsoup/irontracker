@@ -11,7 +11,7 @@ import {
   Divider,
   Avatar
 } from '@mui/material';
-import { supabase } from '../lib/supabase';
+import { getSupabase } from '../lib/supabase';
 import { User } from '@supabase/supabase-js';
 
 interface ProfileData {
@@ -34,7 +34,7 @@ export const Profile: React.FC = () => {
   useEffect(() => {
     const getUser = async () => {
       try {
-        const { data: { user } } = await supabase.auth.getUser();
+        const { data: { user } } = await getSupabase().auth.getUser();
         setUser(user);
         
         if (user) {
@@ -60,7 +60,7 @@ export const Profile: React.FC = () => {
     setSuccess(null);
 
     try {
-      const { error } = await supabase.auth.updateUser({
+      const { error } = await getSupabase().auth.updateUser({
         data: {
           display_name: profileData.display_name
         }
@@ -82,7 +82,7 @@ export const Profile: React.FC = () => {
     setSuccess(null);
 
     try {
-      const { error } = await supabase.auth.updateUser({
+      const { error } = await getSupabase().auth.updateUser({
         email: profileData.email
       });
 
@@ -102,7 +102,7 @@ export const Profile: React.FC = () => {
     setSuccess(null);
 
     try {
-      const { error } = await supabase.auth.resetPasswordForEmail(profileData.email, {
+      const { error } = await getSupabase().auth.resetPasswordForEmail(profileData.email, {
         redirectTo: `${window.location.origin}/reset-password`
       });
 
@@ -242,7 +242,7 @@ export const Profile: React.FC = () => {
             <Button
               variant="outlined"
               color="error"
-              onClick={() => supabase.auth.signOut()}
+              onClick={() => getSupabase().auth.signOut()}
             >
               Sign Out
             </Button>
