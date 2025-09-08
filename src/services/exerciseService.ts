@@ -12,9 +12,9 @@ export const exerciseService = {
     const supabase = getSupabase();
     // Get the current user
     const { data: { user }, error: userError } = await supabase.auth.getUser();
-    if (userError) throw userError;
-    if (!user) throw new Error('User must be authenticated to get exercises');
-    
+    if (userError) return [];
+    if (!user) return [];
+
     const { data, error } = await supabase
       .from('exercises')
       .select(`
