@@ -70,9 +70,10 @@ function App() {
   const [activeWorkout, setActiveWorkout] = useState<Workout | null>(null)
 
   useEffect(() => {
-    loadExercises()
-    checkActiveWorkout()
-  }, [])
+    if (!user) return;
+    loadExercises();
+    checkActiveWorkout();
+  }, [user])
 
   const loadExercises = async () => {
     try {
