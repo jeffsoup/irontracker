@@ -34,26 +34,8 @@ function App() {
     };
   }, []);
 
-  useEffect(() => {
-    const upsertUser = async () => {
-      if (user) {
-        // You can add more fields as needed
-        const { error } = await supabase
-          .from('users')
-          .upsert([
-            {
-              id: user.id, // assuming your users table uses the same id as auth.users
-              email: user.email,
-              // add more fields if needed
-            }
-          ]);
-        if (error) {
-          console.error('Error upserting user:', error);
-        }
-      }
-    };
-    upsertUser();
-  }, [user]);
+  // Note: User data is managed by Supabase Auth system
+  // No need to manually upsert user data since we're using auth.users
 
   const [exercises, setExercises] = useState<Exercise[]>([])
   const [snackbarOpen, setSnackbarOpen] = useState(false)
