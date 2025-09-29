@@ -210,6 +210,8 @@ function App() {
                   </Alert>
                 </Snackbar>
               </div>
+              
+              {/* AI Chat Component */}
             </div>
           ) : (
             <Navigate to="/signin" replace />
