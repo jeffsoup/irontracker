@@ -9,7 +9,6 @@ import {
   Chip,
   Divider,
   Alert,
-  Collapse,
   List,
   ListItem,
   ListItemText,
@@ -19,7 +18,6 @@ import {
   Send,
   SmartToy,
   Person,
-  ExpandLess,
   ExpandMore,
   FitnessCenter,
   Restaurant,
@@ -110,14 +108,14 @@ export const AIChat: React.FC = () => {
 
     try {
       // Convert messages to Vertex AI format
-      const vertexMessages = messages.map(msg => ({
-        role: msg.role === 'user' ? 'user' : 'model',
+      const vertexMessages: Array<{ role: 'user' | 'model', parts: { text: string }[] }> = messages.map(msg => ({
+        role: msg.role === 'user' ? 'user' as const : 'model' as const,
         parts: [{ text: msg.content }]
       }));
 
       // Add the new user message
       vertexMessages.push({
-        role: 'user',
+        role: 'user' as const,
         parts: [{ text: message.trim() }]
       });
 

@@ -1,11 +1,12 @@
 // Custom process polyfill for Google Cloud libraries in browser
 // Ensure process is always available globally
+// we might be able to remove this polyfill later
 // @ts-nocheck
 
 // Import events polyfill
 import { EventEmitter } from 'events';
 // Import our custom util polyfill
-import * as util from './util';
+import * as util from './util.js';
 // Import promisify polyfill
 import promisify from 'util-promisify';
 
@@ -386,3 +387,6 @@ if (typeof process !== 'undefined') {
     };
   }
 }
+
+// Export to ensure this file is treated as a module
+export {};

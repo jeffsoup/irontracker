@@ -1,62 +1,21 @@
-import '../polyfills/process';
-import { VertexAI } from '@google-cloud/vertexai';
-
 interface ChatMessage {
   role: 'user' | 'model';
   parts: { text: string }[];
 }
 
-interface ChatResponse {
-  response: {
-    candidates: {
-      content: {
-        parts: { text: string }[];
-      };
-    }[];
-  };
-}
-
 class VertexAIService {
-  private vertexAI: VertexAI;
-  private model: any;
+  private apiKey: string;
+  private model: string = 'gemini-1.5-flash';
 
   constructor() {
-    // Initialize Vertex AI with environment variables
-    const projectId = import.meta.env.VITE_GOOGLE_CLOUD_PROJECT_ID;
-    const location = import.meta.env.VITE_GOOGLE_CLOUD_LOCATION || 'us-central1';
+    // Initialize with API key for browser usage
+    // Using Google AI API (generativelanguage.googleapis.com) instead of Vertex AI
+    // This API works directly in the browser without needing service account credentials
+    this.apiKey = import.meta.env.VITE_GOOGLE_CLOUD_API || '';
     
-    if (!projectId) {
-      throw new Error('VITE_GOOGLE_CLOUD_PROJECT_ID environment variable is required');
+    if (!this.apiKey) {
+      console.warn('VITE_GOOGLE_CLOUD_API environment variable is not set. AI features will not work.');
     }
-
-    // Parse service account key from environment variable
-    const serviceAccountKey = import.meta.env.VITE_GOOGLE_CLOUD_SERVICE_ACCOUNT_KEY;
-    let credentials;
-    
-    if (serviceAccountKey) {
-      try {
-        credentials = JSON.parse(serviceAccountKey);
-      } catch (error) {
-        console.error('Failed to parse service account key:', error);
-        throw new Error('Invalid service account key format');
-      }
-    }
-
-    this.vertexAI = new VertexAI({
-      project: projectId,
-      location: location,
-      credentials: credentials,
-      // Additional configuration for browser environment
-      gaxOptions: {
-        'grpc.max_send_message_length': -1,
-        'grpc.max_receive_message_length': -1,
-      },
-    });
-
-    this.model = this.vertexAI.getGenerativeModel({
-      model: 'gemini-1.5-flash',
-      systemInstruction: this.getSystemInstruction(),
-    });
   }
 
   private getSystemInstruction(): string {
@@ -84,16 +43,62 @@ Remember: You're helping users achieve their fitness goals safely and effectivel
 
   async sendMessage(message: string, chatHistory: ChatMessage[] = []): Promise<string> {
     try {
-      const chat = this.model.startChat({
-        history: chatHistory,
-      });
+      if (!this.apiKey) {
+        throw new Error('API key is not configured. Please set VITE_GOOGLE_CLOUD_API environment variable.');
+      }
 
-      const result = await chat.sendMessage(message);
-      const response = await result.response;
+      // Build the request body with system instruction and chat history
+      const contents = [
+        ...chatHistory,
+        {
+          role: 'user',
+          parts: [{ text: message }]
+        }
+      ];
+
+      const requestBody = {
+        contents: contents,
+        systemInstruction: {
+          parts: [{ text: this.getSystemInstruction() }]
+        },
+        generationConfig: {
+          temperature: 0.7,
+          topK: 40,
+          topP: 0.95,
+          maxOutputTokens: 2048,
+        }
+      };
+
+      // Use the Google AI API endpoint (works with browser)
+      const response = await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models/${this.model}:generateContent?key=${this.apiKey}`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(requestBody),
+        }
+      );
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        console.error('API Error:', errorData);
+        throw new Error(`API request failed: ${response.status} ${response.statusText}`);
+      }
+
+      const data = await response.json();
       
-      return response.text();
+      if (data.candidates && data.candidates[0]?.content?.parts?.[0]?.text) {
+        return data.candidates[0].content.parts[0].text;
+      }
+
+      throw new Error('Invalid response format from API');
     } catch (error) {
       console.error('Error sending message to Vertex AI:', error);
+      if (error instanceof Error) {
+        throw error;
+      }
       throw new Error('Failed to get response from AI assistant. Please try again.');
     }
   }
