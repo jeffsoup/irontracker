@@ -13,13 +13,23 @@ import {
   Autocomplete,
   Paper,
   Chip,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  IconButton,
+  Alert,
 } from '@mui/material';
+import PhotoCameraIcon from '@mui/icons-material/PhotoCamera';
+import CloseIcon from '@mui/icons-material/Close';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import { format } from 'date-fns';
 import { ExerciseFormData, Workout } from '../types/Exercise';
 import { exerciseService } from '../services/exerciseService';
+import { imageService } from '../services/imageService';
+import { supabase } from '../lib/supabase';
 
 interface ExerciseFormProps {
   onSubmit: (exercise: ExerciseFormData) => void;
@@ -41,11 +51,17 @@ export const ExerciseForm: React.FC<ExerciseFormProps> = ({ onSubmit, activeWork
     rating: null,
     notes: '',
     workout: null,
+    image_path: null,
   });
 
   const [exerciseNames, setExerciseNames] = useState<string[]>([]);
   const [categories, setCategories] = useState<string[]>([]);
   const [recommendedExercises, setRecommendedExercises] = useState<RecommendedExercise[]>([]);
+  const [selectedImage, setSelectedImage] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [imageDialogOpen, setImageDialogOpen] = useState(false);
+  const [imageError, setImageError] = useState<string | null>(null);
+  const [uploading, setUploading] = useState(false);
 
   useEffect(() => {
     // Only fetch categories from the active workout
@@ -157,15 +173,61 @@ export const ExerciseForm: React.FC<ExerciseFormProps> = ({ onSubmit, activeWork
     }
   }, [formData.category]);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleImageSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    try {
+      imageService.validateImageFile(file);
+      setSelectedImage(file);
+      setImageError(null);
+      
+      // Create preview
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setImagePreview(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+      
+      setImageDialogOpen(true);
+    } catch (error: any) {
+      setImageError(error.message);
+      setSelectedImage(null);
+      setImagePreview(null);
+    }
+  };
+
+  const handleRemoveImage = () => {
+    setSelectedImage(null);
+    setImagePreview(null);
+    setImageDialogOpen(false);
+    setImageError(null);
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (activeWorkout) {
+    if (!activeWorkout) return;
+
+    try {
+      setUploading(true);
+      let imagePath: string | null = null;
+
+      // Upload image if one was selected
+      if (selectedImage) {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) throw new Error('User must be authenticated to upload images');
+        imagePath = await imageService.uploadImage(selectedImage, user.id);
+      }
+
       onSubmit({
         ...formData,
         name: formData.name ? formData.name.trim() : null,
         notes: formData.notes || null,
         workout: activeWorkout.id,
+        image_path: imagePath,
       });
+
+      // Reset form
       setFormData({
         name: '',
         category: '',
@@ -175,9 +237,17 @@ export const ExerciseForm: React.FC<ExerciseFormProps> = ({ onSubmit, activeWork
         rating: null,
         notes: '',
         workout: null,
+        image_path: null,
       });
       setExerciseNames([]);
       setRecommendedExercises([]);
+      setSelectedImage(null);
+      setImagePreview(null);
+      setImageError(null);
+    } catch (error: any) {
+      setImageError(error.message || 'Failed to upload image');
+    } finally {
+      setUploading(false);
     }
   };
 
@@ -302,10 +372,114 @@ export const ExerciseForm: React.FC<ExerciseFormProps> = ({ onSubmit, activeWork
           rows={3}
           fullWidth
         />
-        <Button type="submit" variant="contained" color="primary">
-          💪 Add Set 💪
+        
+        {/* Image Upload Section */}
+        <Box>
+          <input
+            accept="image/*"
+            style={{ display: 'none' }}
+            id="image-upload-button"
+            type="file"
+            onChange={handleImageSelect}
+          />
+          <label htmlFor="image-upload-button">
+            <Button
+              variant="outlined"
+              component="span"
+              startIcon={<PhotoCameraIcon />}
+              fullWidth
+            >
+              {selectedImage ? 'Change Image' : 'Add Image (Optional)'}
+            </Button>
+          </label>
+          {imagePreview && (
+            <Box sx={{ mt: 2, position: 'relative' }}>
+              <img
+                src={imagePreview}
+                alt="Preview"
+                style={{
+                  width: '100%',
+                  maxHeight: '200px',
+                  objectFit: 'contain',
+                  borderRadius: '8px'
+                }}
+              />
+              <IconButton
+                onClick={handleRemoveImage}
+                sx={{
+                  position: 'absolute',
+                  top: 8,
+                  right: 8,
+                  bgcolor: 'background.paper',
+                  '&:hover': { bgcolor: 'background.paper' }
+                }}
+                size="small"
+              >
+                <CloseIcon />
+              </IconButton>
+            </Box>
+          )}
+          {imageError && (
+            <Alert severity="error" sx={{ mt: 2 }}>
+              {imageError}
+            </Alert>
+          )}
+        </Box>
+
+        <Button 
+          type="submit" 
+          variant="contained" 
+          color="primary"
+          disabled={uploading}
+        >
+          {uploading ? 'Uploading...' : '💪 Add Set 💪'}
         </Button>
       </Stack>
+
+      {/* Image Preview Dialog */}
+      <Dialog
+        open={imageDialogOpen}
+        onClose={() => setImageDialogOpen(false)}
+        maxWidth="md"
+        fullWidth
+      >
+        <DialogTitle>
+          Image Preview
+          <IconButton
+            onClick={() => setImageDialogOpen(false)}
+            sx={{
+              position: 'absolute',
+              right: 8,
+              top: 8,
+            }}
+          >
+            <CloseIcon />
+          </IconButton>
+        </DialogTitle>
+        <DialogContent>
+          {imagePreview && (
+            <Box sx={{ display: 'flex', justifyContent: 'center', p: 2 }}>
+              <img
+                src={imagePreview}
+                alt="Preview"
+                style={{
+                  maxWidth: '100%',
+                  maxHeight: '500px',
+                  objectFit: 'contain'
+                }}
+              />
+            </Box>
+          )}
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleRemoveImage} color="error">
+            Remove Image
+          </Button>
+          <Button onClick={() => setImageDialogOpen(false)} variant="contained">
+            Looks Good
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 };
