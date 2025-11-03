@@ -54,27 +54,60 @@ Enhanced the exercise history table:
 ### Required Setup in Supabase
 Make sure you have:
 1. Created the `workout-images` bucket in Supabase Storage
-2. Added the `image_path` column to the `exercises` table (type: `text`, nullable)
-3. Set appropriate Storage policies for authenticated users:
+2. **CRITICAL**: Set the bucket to **PUBLIC** in Supabase Storage Dashboard
+   - Go to Storage → Buckets → workout-images → Settings
+   - Toggle "Public bucket" to ON
+   - **This is required for `getPublicUrl` to work. If the bucket is private, you'll get "Bucket not found" errors.**
+   - **Security Note**: Making the bucket PUBLIC only affects public READ access via URL. All WRITE operations (INSERT, UPDATE, DELETE) are still protected by RLS policies below.
+3. Added the `image_path` column to the `exercises` table (type: `text`, nullable)
+4. Set appropriate Storage policies:
+   
+   **For Public Read Access (anon role)** - This allows public URLs to work:
    ```sql
-   -- Allow users to upload images to their own folder
+   -- Allow public read access to images in the workout-images bucket
+   -- Files are stored as: {userId}/{filename}
+   -- This policy allows anonymous users to read images via public URLs
+   CREATE POLICY "Public read access for images"
+   ON storage.objects FOR SELECT
+   TO anon
+   USING (
+     bucket_id = 'workout-images'::text 
+     AND (storage.extension(name) = ANY(ARRAY['jpg'::text, 'jpeg'::text, 'png'::text, 'gif'::text, 'webp'::text]))
+   );
+   ```
+
+   **For Authenticated Users (INSERT/DELETE protection)**:
+   ```sql
+   -- SECURITY: Allow users to upload images ONLY to their own folder
+   -- Files must be uploaded to: {auth.uid()}/{filename}
    CREATE POLICY "Users can upload images to their own folder"
    ON storage.objects FOR INSERT
    TO authenticated
-   WITH CHECK (bucket_id = 'workout-images' AND (storage.foldername(name))[1] = auth.uid()::text);
+   WITH CHECK (
+     bucket_id = 'workout-images' 
+     AND (storage.foldername(name))[1] = auth.uid()::text
+   );
 
-   -- Allow users to view their own images
-   CREATE POLICY "Users can view their own images"
+   -- Allow authenticated users to view their own images via API
+   CREATE POLICY "Users can view their own images via API"
    ON storage.objects FOR SELECT
    TO authenticated
-   USING (bucket_id = 'workout-images' AND (storage.foldername(name))[1] = auth.uid()::text);
+   USING (
+     bucket_id = 'workout-images' 
+     AND (storage.foldername(name))[1] = auth.uid()::text
+   );
 
-   -- Allow users to delete their own images
+   -- SECURITY: Allow users to delete images ONLY from their own folder
    CREATE POLICY "Users can delete their own images"
    ON storage.objects FOR DELETE
    TO authenticated
-   USING (bucket_id = 'workout-images' AND (storage.foldername(name))[1] = auth.uid()::text);
+   USING (
+     bucket_id = 'workout-images' 
+     AND (storage.foldername(name))[1] = auth.uid()::text
+   );
    ```
+   
+   **Note**: Your current policy checks for folder `'public'`, but the code stores files in `{userId}` folders. The policy above matches the actual file structure.
 
 ## User Flow
 
@@ -116,4 +149,29 @@ Make sure you have:
 - When editing, old images are deleted before uploading new ones to save storage space
 - All image operations require user authentication
 - Uses Material-UI components for consistent styling
+
+## Security Model
+
+### Bucket Visibility: PUBLIC
+- The bucket is set to PUBLIC to enable public URL access for displaying images
+- This means anyone with the full URL can view the image
+- File names are randomly generated (timestamp + random string), making URLs hard to guess
+
+### Write Protection: RLS Policies
+- **INSERT operations** are protected: Users can ONLY upload to folders matching their own `userId`
+- **DELETE operations** are protected: Users can ONLY delete images from their own folder
+- **Authentication required**: All write operations require an authenticated user session
+- The code verifies authentication before any upload/delete operation
+
+### Security Considerations
+1. **URL Exposure**: If someone gains access to an `image_path` from your database, they can view that image via the public URL
+2. **File Organization**: Images are organized by `userId` folder, providing natural isolation
+3. **Random Filenames**: Timestamp + random string prevents predictable URL patterns
+4. **No Overwrite Protection**: The `upsert: false` setting prevents accidental overwrites, but RLS policies prevent unauthorized access
+
+### If You Need Stricter Security
+If you want to prevent public access entirely (even with the URL), you would need to:
+- Keep the bucket PRIVATE
+- Use signed URLs (time-limited) instead of public URLs
+- This requires modifying the code to generate signed URLs via `supabase.storage.from('workout-images').createSignedUrl(path, expiresIn)`
 

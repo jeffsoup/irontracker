@@ -568,6 +568,9 @@ export const ExerciseList: React.FC<ExerciseListProps> = ({ onDelete, activeWork
                                   <img
                                     src={imageService.getImageUrl(editForm.image_path)}
                                     alt="Exercise"
+                                    onError={(e) => {
+                                      console.error('Error loading image:', editForm.image_path);
+                                    }}
                                     style={{
                                       width: '60px',
                                       height: '60px',
@@ -732,6 +735,10 @@ export const ExerciseList: React.FC<ExerciseListProps> = ({ onDelete, activeWork
               <img
                 src={viewImageUrl}
                 alt="Exercise"
+                onError={(e) => {
+                  console.error('Error loading image:', viewImageUrl);
+                  setImageError('Failed to load image. Please ensure the storage bucket is set to public in Supabase.');
+                }}
                 style={{
                   maxWidth: '100%',
                   maxHeight: '80vh',
