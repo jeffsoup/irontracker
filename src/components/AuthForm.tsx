@@ -193,7 +193,7 @@ export const AuthForm: React.FC = () => {
     }}>
       <Card sx={{ maxWidth: 500, width: '100%', boxShadow: 3 }}>
         <CardContent sx={{ p: 0 }}>
-          <Box sx={{ textAlign: 'center', p: 3, pb: 0 }}>
+          <Box sx={{ textAlign: 'center', p: 3, pb: 0, backgroundColor: '#000', color: 'rgb(245, 166, 35)' }}>
             <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 1, mb: 1 }}>
               <img
                 src="https://cdn.builder.io/api/v1/image/assets%2F51cc6beedd56403385e006cba32cbc20%2F3149914a25fd44d8b9f9b79ff4e104d9?format=webp&width=800"
@@ -204,7 +204,7 @@ export const AuthForm: React.FC = () => {
                 IronTracker
               </Typography>
             </Box>
-            <Typography variant="body1" color="text.secondary">
+            <Typography variant="body1" sx={{ color: 'rgb(155, 155, 155)' }}>
               Track your fitness journey
             </Typography>
           </Box>
@@ -237,6 +237,24 @@ export const AuthForm: React.FC = () => {
                 onChange={(e) => setSignInData({ ...signInData, email: e.target.value })}
                 margin="normal"
                 required
+                sx={{
+                  '& .MuiOutlinedInput-root': {
+                    backgroundColor: '#fff',
+                    '& fieldset': { borderColor: '#ccc' },
+                    '&:hover fieldset': { borderColor: '#999' },
+                    '&.Mui-focused fieldset': { borderColor: '#1976d2' },
+                  },
+                  '& .MuiOutlinedInput-input': {
+                    color: 'rgb(155, 155, 155)',
+                  },
+                  '& .MuiInputBase-input::placeholder': {
+                    color: 'rgb(155, 155, 155)',
+                    opacity: 1,
+                  },
+                  '& .MuiFormLabel-root': {
+                    color: 'rgb(155, 155, 155)',
+                  },
+                }}
               />
               <TextField
                 fullWidth
@@ -246,6 +264,24 @@ export const AuthForm: React.FC = () => {
                 onChange={(e) => setSignInData({ ...signInData, password: e.target.value })}
                 margin="normal"
                 required
+                sx={{
+                  '& .MuiOutlinedInput-root': {
+                    backgroundColor: '#fff',
+                    '& fieldset': { borderColor: '#ccc' },
+                    '&:hover fieldset': { borderColor: '#999' },
+                    '&.Mui-focused fieldset': { borderColor: '#1976d2' },
+                  },
+                  '& .MuiOutlinedInput-input': {
+                    color: 'rgb(155, 155, 155)',
+                  },
+                  '& .MuiInputBase-input::placeholder': {
+                    color: 'rgb(155, 155, 155)',
+                    opacity: 1,
+                  },
+                  '& .MuiFormLabel-root': {
+                    color: 'rgb(155, 155, 155)',
+                  },
+                }}
               />
               <Button
                 type="submit"
