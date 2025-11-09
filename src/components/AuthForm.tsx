@@ -13,7 +13,7 @@ import {
   Divider,
   Link
 } from '@mui/material';
-import { supabase } from '../lib/supabase';
+import { getSupabase } from '../lib/supabase';
 
 // Base site URL for auth redirects: prefer env var, fallback to current origin
 const SITE_URL = (import.meta as any).env?.VITE_SITE_URL || (typeof window !== 'undefined' ? window.location.origin : '');
@@ -36,7 +36,7 @@ function TabPanel(props: TabPanelProps) {
       {...other}
     >
       {value === index && (
-        <Box sx={{ p: 3 }}>
+        <Box sx={{ p: 3, backgroundColor: 'rgba(0, 0, 0, 1)' }}>
           {children}
         </Box>
       )}
@@ -87,6 +87,7 @@ export const AuthForm: React.FC = () => {
     }
 
     try {
+      const supabase = getSupabase();
       const { data, error } = await supabase.auth.signUp({
         email: signUpData.email,
         password: signUpData.password,
@@ -121,6 +122,7 @@ export const AuthForm: React.FC = () => {
     setSuccess(null);
 
     try {
+      const supabase = getSupabase();
       const { error } = await supabase.auth.signInWithPassword({
         email: signInData.email,
         password: signInData.password
@@ -141,6 +143,7 @@ export const AuthForm: React.FC = () => {
     setSuccess(null);
 
     try {
+      const supabase = getSupabase();
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
@@ -167,6 +170,7 @@ export const AuthForm: React.FC = () => {
     setSuccess(null);
 
     try {
+      const supabase = getSupabase();
       const { error } = await supabase.auth.resetPasswordForEmail(resetEmail, {
         redirectTo: `${SITE_URL}/reset-password`
       });
@@ -182,29 +186,46 @@ export const AuthForm: React.FC = () => {
   };
 
   return (
-    <Box sx={{ 
-      minHeight: '100vh', 
-      display: 'flex', 
-      alignItems: 'center', 
+    <Box sx={{
+      minHeight: '100vh',
+      display: 'flex',
+      alignItems: 'center',
       justifyContent: 'center',
-      background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+      backgroundColor: 'rgba(74, 74, 74, 0.52)',
       p: 2
     }}>
       <Card sx={{ maxWidth: 500, width: '100%', boxShadow: 3 }}>
-        <CardContent sx={{ p: 0 }}>
-          <Box sx={{ textAlign: 'center', p: 3, pb: 0 }}>
-            <Typography variant="h4" component="h1" sx={{ mb: 1, fontWeight: 'bold' }}>
-              💪 IronTracker
-            </Typography>
-            <Typography variant="body1" color="text.secondary">
+        <CardContent sx={{ p: 0, backgroundColor: 'rgba(0, 0, 0, 1)' }}>
+          <Box sx={{ textAlign: 'center', p: 3, pb: 0, backgroundColor: '#000', color: 'rgb(245, 166, 35)' }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 1, mb: 1 }}>
+              <img
+                src="https://cdn.builder.io/api/v1/image/assets%2F51cc6beedd56403385e006cba32cbc20%2F3149914a25fd44d8b9f9b79ff4e104d9?format=webp&width=800"
+                alt="IronTracker Logo"
+                style={{ height: '40px', width: 'auto' }}
+              />
+              <Typography variant="h4" component="h1" sx={{ fontWeight: 'bold' }}>
+                IronTracker
+              </Typography>
+            </Box>
+            <Typography variant="body1" sx={{ color: 'rgb(155, 155, 155)' }}>
               Track your fitness journey
             </Typography>
           </Box>
 
-          <Tabs value={tabValue} onChange={handleTabChange} centered sx={{ borderBottom: 1, borderColor: 'divider' }}>
+          <Tabs
+            value={tabValue}
+            onChange={handleTabChange}
+            centered
+            sx={{
+              borderBottom: 1,
+              borderColor: 'divider',
+              backgroundColor: 'rgba(0, 0, 0, 1)',
+              color: 'rgba(155, 155, 155, 1)',
+            }}
+          >
             <Tab label="Sign In" />
-            <Tab label="Sign Up" />
-            <Tab label="Reset Password" />
+            <Tab label="Sign Up" sx={{ color: 'rgba(74, 74, 74, 1)' }} />
+            <Tab label="Reset Password" sx={{ color: 'rgba(74, 74, 74, 1)' }} />
           </Tabs>
 
           {error && (
@@ -229,6 +250,24 @@ export const AuthForm: React.FC = () => {
                 onChange={(e) => setSignInData({ ...signInData, email: e.target.value })}
                 margin="normal"
                 required
+                sx={{
+                  '& .MuiOutlinedInput-root': {
+                    backgroundColor: '#fff',
+                    '& fieldset': { borderColor: '#ccc' },
+                    '&:hover fieldset': { borderColor: '#999' },
+                    '&.Mui-focused fieldset': { borderColor: '#1976d2' },
+                  },
+                  '& .MuiOutlinedInput-input': {
+                    color: 'rgb(155, 155, 155)',
+                  },
+                  '& .MuiInputBase-input::placeholder': {
+                    color: 'rgb(155, 155, 155)',
+                    opacity: 1,
+                  },
+                  '& .MuiFormLabel-root': {
+                    color: 'rgb(155, 155, 155)',
+                  },
+                }}
               />
               <TextField
                 fullWidth
@@ -238,6 +277,24 @@ export const AuthForm: React.FC = () => {
                 onChange={(e) => setSignInData({ ...signInData, password: e.target.value })}
                 margin="normal"
                 required
+                sx={{
+                  '& .MuiOutlinedInput-root': {
+                    backgroundColor: '#fff',
+                    '& fieldset': { borderColor: '#ccc' },
+                    '&:hover fieldset': { borderColor: '#999' },
+                    '&.Mui-focused fieldset': { borderColor: '#1976d2' },
+                  },
+                  '& .MuiOutlinedInput-input': {
+                    color: 'rgb(155, 155, 155)',
+                  },
+                  '& .MuiInputBase-input::placeholder': {
+                    color: 'rgb(155, 155, 155)',
+                    opacity: 1,
+                  },
+                  '& .MuiFormLabel-root': {
+                    color: 'rgb(155, 155, 155)',
+                  },
+                }}
               />
               <Button
                 type="submit"
@@ -285,6 +342,20 @@ export const AuthForm: React.FC = () => {
                   onChange={(e) => setSignUpData({ ...signUpData, firstName: e.target.value })}
                   margin="normal"
                   required
+                  sx={{
+                    '& .MuiOutlinedInput-root': {
+                      backgroundColor: '#fff',
+                      '& fieldset': { borderColor: '#ccc' },
+                      '&:hover fieldset': { borderColor: '#999' },
+                      '&.Mui-focused fieldset': { borderColor: '#1976d2' },
+                    },
+                    '& .MuiOutlinedInput-input': {
+                      color: 'rgb(155, 155, 155)',
+                    },
+                    '& .MuiFormLabel-root': {
+                      color: 'rgb(155, 155, 155)',
+                    },
+                  }}
                 />
                 <TextField
                   fullWidth
@@ -293,6 +364,20 @@ export const AuthForm: React.FC = () => {
                   onChange={(e) => setSignUpData({ ...signUpData, lastName: e.target.value })}
                   margin="normal"
                   required
+                  sx={{
+                    '& .MuiOutlinedInput-root': {
+                      backgroundColor: '#fff',
+                      '& fieldset': { borderColor: '#ccc' },
+                      '&:hover fieldset': { borderColor: '#999' },
+                      '&.Mui-focused fieldset': { borderColor: '#1976d2' },
+                    },
+                    '& .MuiOutlinedInput-input': {
+                      color: 'rgb(155, 155, 155)',
+                    },
+                    '& .MuiFormLabel-root': {
+                      color: 'rgb(155, 155, 155)',
+                    },
+                  }}
                 />
               </Box>
               <TextField
@@ -303,6 +388,20 @@ export const AuthForm: React.FC = () => {
                 onChange={(e) => setSignUpData({ ...signUpData, email: e.target.value })}
                 margin="normal"
                 required
+                sx={{
+                  '& .MuiOutlinedInput-root': {
+                    backgroundColor: '#fff',
+                    '& fieldset': { borderColor: '#ccc' },
+                    '&:hover fieldset': { borderColor: '#999' },
+                    '&.Mui-focused fieldset': { borderColor: '#1976d2' },
+                  },
+                  '& .MuiOutlinedInput-input': {
+                    color: 'rgb(155, 155, 155)',
+                  },
+                  '& .MuiFormLabel-root': {
+                    color: 'rgb(155, 155, 155)',
+                  },
+                }}
               />
               <TextField
                 fullWidth
@@ -312,6 +411,20 @@ export const AuthForm: React.FC = () => {
                 onChange={(e) => setSignUpData({ ...signUpData, password: e.target.value })}
                 margin="normal"
                 required
+                sx={{
+                  '& .MuiOutlinedInput-root': {
+                    backgroundColor: '#fff',
+                    '& fieldset': { borderColor: '#ccc' },
+                    '&:hover fieldset': { borderColor: '#999' },
+                    '&.Mui-focused fieldset': { borderColor: '#1976d2' },
+                  },
+                  '& .MuiOutlinedInput-input': {
+                    color: 'rgb(155, 155, 155)',
+                  },
+                  '& .MuiFormLabel-root': {
+                    color: 'rgb(155, 155, 155)',
+                  },
+                }}
               />
               <TextField
                 fullWidth
@@ -321,6 +434,20 @@ export const AuthForm: React.FC = () => {
                 onChange={(e) => setSignUpData({ ...signUpData, confirmPassword: e.target.value })}
                 margin="normal"
                 required
+                sx={{
+                  '& .MuiOutlinedInput-root': {
+                    backgroundColor: '#fff',
+                    '& fieldset': { borderColor: '#ccc' },
+                    '&:hover fieldset': { borderColor: '#999' },
+                    '&.Mui-focused fieldset': { borderColor: '#1976d2' },
+                  },
+                  '& .MuiOutlinedInput-input': {
+                    color: 'rgb(155, 155, 155)',
+                  },
+                  '& .MuiFormLabel-root': {
+                    color: 'rgb(155, 155, 155)',
+                  },
+                }}
               />
               <Button
                 type="submit"
@@ -359,6 +486,20 @@ export const AuthForm: React.FC = () => {
                 onChange={(e) => setResetEmail(e.target.value)}
                 margin="normal"
                 required
+                sx={{
+                  '& .MuiOutlinedInput-root': {
+                    backgroundColor: '#fff',
+                    '& fieldset': { borderColor: '#ccc' },
+                    '&:hover fieldset': { borderColor: '#999' },
+                    '&.Mui-focused fieldset': { borderColor: '#1976d2' },
+                  },
+                  '& .MuiOutlinedInput-input': {
+                    color: 'rgb(155, 155, 155)',
+                  },
+                  '& .MuiFormLabel-root': {
+                    color: 'rgb(155, 155, 155)',
+                  },
+                }}
               />
               <Button
                 type="submit"

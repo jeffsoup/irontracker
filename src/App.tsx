@@ -6,7 +6,7 @@ import { AuthForm } from './components/AuthForm'
 import { exerciseService } from './services/exerciseService'
 import { workoutService } from './services/workoutService'
 import { Exercise, Workout } from './types/Exercise'
-import { supabase } from './lib/supabase';
+import { getSupabase } from './lib/supabase';
 import { User } from '@supabase/supabase-js';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { Analytics } from "@vercel/analytics/react"
@@ -17,18 +17,26 @@ function App() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    const url = import.meta.env.VITE_SUPABASE_URL as string | undefined;
+    const key = import.meta.env.VITE_SUPABASE_ANON_KEY as string | undefined;
+    if (!url || !key) {
+      setLoading(false);
+      return;
+    }
+
+    const supabase = getSupabase();
     // Listen for auth state changes
     const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
       setUser(session?.user ?? null);
       setLoading(false);
     });
-    
+
     // Check initial session
     supabase.auth.getSession().then(({ data: { session } }) => {
       setUser(session?.user ?? null);
       setLoading(false);
     });
-    
+
     return () => {
       listener.subscription.unsubscribe();
     };
@@ -44,9 +52,10 @@ function App() {
   const [activeWorkout, setActiveWorkout] = useState<Workout | null>(null)
 
   useEffect(() => {
-    loadExercises()
-    checkActiveWorkout()
-  }, [])
+    if (!user) return;
+    loadExercises();
+    checkActiveWorkout();
+  }, [user])
 
   const loadExercises = async () => {
     try {
@@ -120,6 +129,15 @@ function App() {
     );
   }
 
+  const envMissing = !(import.meta.env.VITE_SUPABASE_URL && import.meta.env.VITE_SUPABASE_ANON_KEY);
+  if (envMissing) {
+    return (
+      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', p: 3 }}>
+        <Typography color="error">Supabase is not configured. Please set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY.</Typography>
+      </Box>
+    );
+  }
+
   return (
     <Router>
       <Analytics />
@@ -133,9 +151,16 @@ function App() {
               <div className="fitness-container">
                 <header className="fitness-header">
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                    <Typography variant="h1" component="h1">
-                      💪 IronTracker
-                    </Typography>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                      <img
+                        src="https://cdn.builder.io/api/v1/image/assets%2F51cc6beedd56403385e006cba32cbc20%2F3149914a25fd44d8b9f9b79ff4e104d9?format=webp&width=800"
+                        alt="IronTracker Logo"
+                        style={{ height: '50px', width: 'auto' }}
+                      />
+                      <Typography variant="h1" component="h1">
+                        IronTracker
+                      </Typography>
+                    </Box>
                     <Typography variant="body2" color="text.secondary">
                       Welcome, {user.email}
                     </Typography>
@@ -169,11 +194,11 @@ function App() {
                         fontWeight: 'bold'
                       }}
                     >
-                      {activeWorkout ? '🏁 FINISH WORKOUT' : '🚀 START WORKOUT'}
+                      {activeWorkout ? 'FINISH WORKOUT' : 'START WORKOUT'}
                     </Button>
                     <Button
                       variant="outlined"
-                      onClick={() => supabase.auth.signOut()}
+                      onClick={() => getSupabase().auth.signOut()}
                       sx={{ height: '56px' }}
                     >
                       Sign Out

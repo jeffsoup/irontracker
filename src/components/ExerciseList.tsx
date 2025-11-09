@@ -24,6 +24,7 @@ import {
   DialogContent,
   DialogActions,
   Alert,
+  Tooltip,
 } from '@mui/material';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
@@ -37,6 +38,7 @@ import ExpandLessIcon from '@mui/icons-material/ExpandLess';
 import PhotoCameraIcon from '@mui/icons-material/PhotoCamera';
 import ImageIcon from '@mui/icons-material/Image';
 import CloseIcon from '@mui/icons-material/Close';
+import DeleteForeverIcon from '@mui/icons-material/DeleteForever';
 import { Exercise } from '../types/Exercise';
 import { exerciseService } from '../services/exerciseService';
 import { imageService } from '../services/imageService';
@@ -80,6 +82,8 @@ export const ExerciseList: React.FC<ExerciseListProps> = ({ onDelete, activeWork
   const [uploading, setUploading] = useState(false);
   const [viewImageDialogOpen, setViewImageDialogOpen] = useState(false);
   const [viewImageUrl, setViewImageUrl] = useState<string | null>(null);
+  const [viewImageExerciseId, setViewImageExerciseId] = useState<string | null>(null);
+  const [deletingImage, setDeletingImage] = useState(false);
 
   useEffect(() => {
     loadExercises();
@@ -174,10 +178,44 @@ export const ExerciseList: React.FC<ExerciseListProps> = ({ onDelete, activeWork
     }
   };
 
-  const handleViewImage = (imagePath: string) => {
-    const imageUrl = imageService.getImageUrl(imagePath);
+  const handleViewImage = (exercise: Exercise) => {
+    if (!exercise.image_path) return;
+    const imageUrl = imageService.getImageUrl(exercise.image_path);
     setViewImageUrl(imageUrl);
+    setViewImageExerciseId(exercise.id);
     setViewImageDialogOpen(true);
+  };
+
+  const handleDeleteExerciseImage = async (exerciseId: string, imagePath: string) => {
+    if (!imagePath) return;
+    const confirmDelete = window.confirm('Delete this exercise image? This action cannot be undone.');
+    if (!confirmDelete) return;
+
+    try {
+      setDeletingImage(true);
+      await imageService.deleteImage(imagePath);
+      const updatedExercise = await exerciseService.updateExercise(exerciseId, { image_path: null });
+      setExercises(prev => prev.map(ex => ex.id === exerciseId ? { ...ex, ...updatedExercise } : ex));
+
+      if (editingId === exerciseId) {
+        setEditForm(prev => prev ? { ...prev, image_path: null } : prev);
+      }
+
+      setSelectedImage(null);
+      setImagePreview(null);
+      setImageError(null);
+
+      if (viewImageExerciseId === exerciseId) {
+        setViewImageDialogOpen(false);
+        setViewImageUrl(null);
+        setViewImageExerciseId(null);
+      }
+    } catch (err: any) {
+      console.error('Error deleting exercise image:', err);
+      setImageError(err.message || 'Failed to delete exercise image');
+    } finally {
+      setDeletingImage(false);
+    }
   };
 
   const handleSave = async () => {
@@ -330,6 +368,8 @@ export const ExerciseList: React.FC<ExerciseListProps> = ({ onDelete, activeWork
     );
   }
 
+  const viewedExercise = viewImageExerciseId ? exercises.find(ex => ex.id === viewImageExerciseId) || null : null;
+
   return (
     <Box sx={{ width: '100%', p: 4 }}>
       <Stack spacing={2} sx={{ mb: 3 }}>
@@ -417,14 +457,17 @@ export const ExerciseList: React.FC<ExerciseListProps> = ({ onDelete, activeWork
                   <TableRow>
                     <TableCell
                       colSpan={10}
-                      sx={{
-                        bgcolor: 'grey.50',
+                      sx={(theme) => ({
+                        backgroundColor: 'rgba(255, 255, 255, 0.04)',
                         py: 1,
-                        borderBottom: '2px solid',
-                        borderColor: 'grey.200',
+                        borderBottom: `2px solid ${theme.palette.divider}`,
                         cursor: 'pointer',
                         userSelect: 'none',
-                      }}
+                        transition: 'background-color 150ms ease',
+                        '&:hover': {
+                          backgroundColor: 'rgba(245, 128, 37, 0.08)',
+                        },
+                      })}
                       onClick={() => toggleDate(dateStr)}
                     >
                       <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
@@ -584,13 +627,29 @@ export const ExerciseList: React.FC<ExerciseListProps> = ({ onDelete, activeWork
                           </Box>
                         ) : (
                           exercise.image_path ? (
-                            <IconButton
-                              size="small"
-                              onClick={() => handleViewImage(exercise.image_path!)}
-                              color="primary"
-                            >
-                              <ImageIcon />
-                            </IconButton>
+                            <Box sx={{ display: 'flex', gap: 0.5 }}>
+                              <Tooltip title="View Image">
+                                <IconButton
+                                  size="small"
+                                  onClick={() => handleViewImage(exercise)}
+                                  color="primary"
+                                >
+                                  <ImageIcon />
+                                </IconButton>
+                              </Tooltip>
+                              <Tooltip title={deletingImage ? 'Deleting...' : 'Delete Image'}>
+                                <span>
+                                  <IconButton
+                                    size="small"
+                                    color="error"
+                                    disabled={deletingImage}
+                                    onClick={() => handleDeleteExerciseImage(exercise.id, exercise.image_path!)}
+                                  >
+                                    <DeleteForeverIcon />
+                                  </IconButton>
+                                </span>
+                              </Tooltip>
+                            </Box>
                           ) : null
                         )}
                       </TableCell>
@@ -749,7 +808,18 @@ export const ExerciseList: React.FC<ExerciseListProps> = ({ onDelete, activeWork
           )}
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setViewImageDialogOpen(false)} variant="contained">
+          {viewedExercise?.image_path && (
+            <Button
+              onClick={() => handleDeleteExerciseImage(viewedExercise.id, viewedExercise.image_path!)}
+              color="error"
+              variant="outlined"
+              startIcon={<DeleteForeverIcon />}
+              disabled={deletingImage}
+            >
+              Delete Image
+            </Button>
+          )}
+          <Button onClick={() => setViewImageDialogOpen(false)} variant="contained" disabled={deletingImage}>
             Close
           </Button>
         </DialogActions>
