@@ -192,7 +192,7 @@ export const AuthForm: React.FC = () => {
       p: 2
     }}>
       <Card sx={{ maxWidth: 500, width: '100%', boxShadow: 3 }}>
-        <CardContent sx={{ p: 0 }}>
+        <CardContent sx={{ p: 0, backgroundColor: 'rgba(0, 0, 0, 1)' }}>
           <Box sx={{ textAlign: 'center', p: 3, pb: 0, backgroundColor: '#000', color: 'rgb(245, 166, 35)' }}>
             <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 1, mb: 1 }}>
               <img
