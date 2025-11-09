@@ -169,9 +169,16 @@ function App() {
               <div className="fitness-container">
                 <header className="fitness-header">
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                    <Typography variant="h1" component="h1">
-                      💪 IronTracker
-                    </Typography>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                      <img
+                        src="https://cdn.builder.io/api/v1/image/assets%2F51cc6beedd56403385e006cba32cbc20%2F3149914a25fd44d8b9f9b79ff4e104d9?format=webp&width=800"
+                        alt="IronTracker Logo"
+                        style={{ height: '40px', width: 'auto' }}
+                      />
+                      <Typography variant="h1" component="h1">
+                        IronTracker
+                      </Typography>
+                    </Box>
                     <Typography variant="body2" color="text.secondary">
                       Welcome, {user.email}
                     </Typography>
