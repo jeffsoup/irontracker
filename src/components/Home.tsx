@@ -290,7 +290,10 @@ export const Home: React.FC = () => {
                       ) : (
                         <Box>
                           <Typography variant="subtitle2" color="text.secondary" sx={{ mb: 1 }}>
-                            💪 Recommended Exercises:
+                            💪{' '}
+                            <span style={{ color: 'rgb(245, 166, 35)' }}>
+                              Recommended Exercises:
+                            </span>
                           </Typography>
                           <Typography variant="body2" sx={{ fontStyle: 'italic', color: '#e0e0e0' }}>
                             No specific exercises found for this category yet. Start working out to build recommendations!
