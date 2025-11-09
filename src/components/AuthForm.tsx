@@ -209,10 +209,20 @@ export const AuthForm: React.FC = () => {
             </Typography>
           </Box>
 
-          <Tabs value={tabValue} onChange={handleTabChange} centered sx={{ borderBottom: 1, borderColor: 'divider' }}>
+          <Tabs
+            value={tabValue}
+            onChange={handleTabChange}
+            centered
+            sx={{
+              borderBottom: 1,
+              borderColor: 'divider',
+              backgroundColor: 'rgba(0, 0, 0, 1)',
+              color: 'rgba(155, 155, 155, 1)',
+            }}
+          >
             <Tab label="Sign In" />
-            <Tab label="Sign Up" />
-            <Tab label="Reset Password" />
+            <Tab label="Sign Up" sx={{ color: 'rgba(74, 74, 74, 1)' }} />
+            <Tab label="Reset Password" sx={{ color: 'rgba(74, 74, 74, 1)' }} />
           </Tabs>
 
           {error && (
