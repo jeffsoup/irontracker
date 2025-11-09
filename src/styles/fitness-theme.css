@@ -1,69 +1,69 @@
 /* Modern Fitness/Gym Theme */
 
 :root {
-  /* Primary Fitness Colors */
-  --fitness-primary: #ff6b35;
-  --fitness-primary-light: #ff8a5b;
-  --fitness-primary-dark: #e55a2b;
-  
-  --fitness-secondary: #00d4ff;
-  --fitness-secondary-light: #33ddff;
-  --fitness-secondary-dark: #00bfe6;
-  
-  --fitness-accent: #f7931e;
-  --fitness-accent-light: #ff9f2e;
-  --fitness-accent-dark: #e8851a;
-  
+  /* Primary Palette */
+  --fitness-primary: var(--primary);
+  --fitness-primary-light: #ff8c42;
+  --fitness-primary-dark: #c7651d;
+
+  --fitness-secondary: var(--secondary);
+  --fitness-secondary-light: #3a3a3a;
+  --fitness-secondary-dark: #1c1c1c;
+
+  --fitness-accent: var(--accent);
+  --fitness-accent-light: #ffa94d;
+  --fitness-accent-dark: #d86b15;
+
   /* Vibrant Accent Colors  */
-  --fitness-electric: #00ffff;
+  --fitness-electric: var(--chart-2);
   --fitness-neon-green: #39ff14;
   --fitness-hot-pink: #ff1b8d;
   --fitness-purple: #8a2be2;
-  
+
   /* Dark Theme Colors */
-  --fitness-bg-primary: #0a0a0a;
-  --fitness-bg-secondary: #151515;
-  --fitness-bg-tertiary: #1a1a1a;
-  --fitness-bg-card: #1e1e1e;
+  --fitness-bg-primary: var(--background);
+  --fitness-bg-secondary: #121212;
+  --fitness-bg-tertiary: #181818;
+  --fitness-bg-card: #1f1f1f;
   --fitness-bg-elevated: #242424;
-  
+
   /* Text Colors */
-  --fitness-text-primary: #ffffff;
-  --fitness-text-secondary: #e0e0e0;
-  --fitness-text-muted: #a0a0a0;
-  --fitness-text-disabled: #666666;
-  
+  --fitness-text-primary: var(--foreground);
+  --fitness-text-secondary: rgba(255, 255, 255, 0.85);
+  --fitness-text-muted: var(--muted-foreground);
+  --fitness-text-disabled: rgba(255, 255, 255, 0.4);
+
   /* Border Colors */
-  --fitness-border: #333333;
-  --fitness-border-light: #404040;
-  --fitness-border-accent: var(--fitness-primary);
-  
+  --fitness-border: var(--border);
+  --fitness-border-light: rgba(245, 128, 37, 0.3);
+  --fitness-border-accent: var(--primary);
+
   /* Status Colors */
-  --fitness-success: #00ff88;
-  --fitness-error: #ff4757;
-  --fitness-warning: #ffa502;
-  --fitness-info: var(--fitness-secondary);
-  
+  --fitness-success: #22c55e;
+  --fitness-error: #ef4444;
+  --fitness-warning: #facc15;
+  --fitness-info: var(--chart-2);
+
   /* Gradients */
-  --fitness-gradient-primary: linear-gradient(135deg, var(--fitness-primary), var(--fitness-accent));
-  --fitness-gradient-secondary: linear-gradient(135deg, var(--fitness-secondary), var(--fitness-electric));
-  --fitness-gradient-dark: linear-gradient(135deg, var(--fitness-bg-secondary), var(--fitness-bg-tertiary));
-  --fitness-gradient-card: linear-gradient(135deg, #1e1e1e, #242424);
-  
+  --fitness-gradient-primary: linear-gradient(135deg, var(--primary), var(--accent));
+  --fitness-gradient-secondary: linear-gradient(135deg, var(--chart-2), var(--chart-4));
+  --fitness-gradient-dark: linear-gradient(135deg, #121212, #181818);
+  --fitness-gradient-card: linear-gradient(135deg, #1f1f1f, #242424);
+
   /* Shadows */
-  --fitness-shadow-sm: 0 2px 4px rgba(255, 107, 53, 0.1);
-  --fitness-shadow-md: 0 4px 8px rgba(255, 107, 53, 0.15);
-  --fitness-shadow-lg: 0 8px 16px rgba(255, 107, 53, 0.2);
-  --fitness-shadow-xl: 0 12px 24px rgba(255, 107, 53, 0.25);
-  --fitness-shadow-glow: 0 0 20px rgba(255, 107, 53, 0.3);
-  
+  --fitness-shadow-sm: 0 2px 4px rgba(245, 128, 37, 0.12);
+  --fitness-shadow-md: 0 4px 12px rgba(245, 128, 37, 0.16);
+  --fitness-shadow-lg: 0 8px 20px rgba(245, 128, 37, 0.2);
+  --fitness-shadow-xl: 0 12px 28px rgba(245, 128, 37, 0.25);
+  --fitness-shadow-glow: 0 0 24px rgba(245, 128, 37, 0.35);
+
   /* Border Radius */
-  --fitness-radius-sm: 4px;
-  --fitness-radius-md: 8px;
-  --fitness-radius-lg: 12px;
-  --fitness-radius-xl: 16px;
+  --fitness-radius-sm: var(--radius-sm);
+  --fitness-radius-md: var(--radius-md);
+  --fitness-radius-lg: var(--radius-lg);
+  --fitness-radius-xl: var(--radius-xl);
   --fitness-radius-full: 50px;
-  
+
   /* Spacing */
   --fitness-space-xs: 0.25rem;
   --fitness-space-sm: 0.5rem;
@@ -72,29 +72,29 @@
   --fitness-space-xl: 2rem;
   --fitness-space-2xl: 3rem;
   --fitness-space-3xl: 4rem;
-  
+
   /* Typography */
-  --fitness-font-primary: 'Rajdhani', 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-  --fitness-font-secondary: 'Orbitron', 'Rajdhani', sans-serif;
-  --fitness-font-body: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-  
+  --fitness-font-primary: var(--font-family-base);
+  --fitness-font-secondary: var(--font-family-base);
+  --fitness-font-body: var(--font-family-base);
+
   --fitness-font-size-xs: 0.75rem;
-  --fitness-font-size-sm: 0.875rem;
-  --fitness-font-size-base: 1rem;
-  --fitness-font-size-lg: 1.125rem;
-  --fitness-font-size-xl: 1.25rem;
-  --fitness-font-size-2xl: 1.5rem;
+  --fitness-font-size-sm: var(--text-sm);
+  --fitness-font-size-base: var(--text-base);
+  --fitness-font-size-lg: var(--text-lg);
+  --fitness-font-size-xl: var(--text-xl);
+  --fitness-font-size-2xl: var(--text-2xl);
   --fitness-font-size-3xl: 2rem;
   --fitness-font-size-4xl: 2.5rem;
   --fitness-font-size-5xl: 3rem;
-  
+
   --fitness-font-weight-light: 300;
-  --fitness-font-weight-normal: 400;
-  --fitness-font-weight-medium: 500;
+  --fitness-font-weight-normal: var(--font-weight-normal);
+  --fitness-font-weight-medium: var(--font-weight-medium);
   --fitness-font-weight-semibold: 600;
   --fitness-font-weight-bold: 700;
   --fitness-font-weight-black: 900;
-  
+
   /* Transitions */
   --fitness-transition-fast: 150ms ease-out;
   --fitness-transition-normal: 300ms ease-out;

@@ -1,7 +1,21 @@
 import React, { useState, useEffect } from 'react';
-import { Box, Typography, CircularProgress, FormControl, InputLabel, Select, MenuItem } from '@mui/material';
-import { Chart as ChartJS, ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarElement, Title } from "chart.js";
-import { Bar } from "react-chartjs-2";
+import {
+  Box,
+  Typography,
+  CircularProgress,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Paper,
+  Chip,
+} from '@mui/material';
 import { exerciseService } from '../services/exerciseService';
 
 export const ChartsComponent: React.FC = () => {
@@ -10,7 +24,9 @@ export const ChartsComponent: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedCategory, setSelectedCategory] = useState<string>('All');
+  const [selectedExercise, setSelectedExercise] = useState<string>('All');
   const [availableCategories, setAvailableCategories] = useState<string[]>([]);
+  const [availableExercises, setAvailableExercises] = useState<string[]>([]);
 
   useEffect(() => {
     const fetchCategories = async () => {
@@ -33,10 +49,15 @@ export const ChartsComponent: React.FC = () => {
           exerciseService.getProgressionData(selectedCategory === 'All' ? undefined : selectedCategory),
           exerciseService.getExerciseUsageData(selectedCategory === 'All' ? undefined : selectedCategory)
         ]);
-        console.log('Progression data:', progData);
-        console.log('Usage data:', usageData);
-        setProgressionData(progData);
-        setUsageData(usageData);
+        const filteredProg = selectedExercise === 'All'
+          ? progData
+          : progData.filter((item) => item.name === selectedExercise);
+        const filteredUsage = selectedExercise === 'All'
+          ? usageData
+          : usageData.filter((item) => item.name === selectedExercise);
+        setProgressionData(filteredProg);
+        setUsageData(filteredUsage);
+        setError(null);
       } catch (err) {
         setError('Failed to load chart data');
         console.error('Error fetching chart data:', err);
@@ -46,17 +67,45 @@ export const ChartsComponent: React.FC = () => {
     };
 
     fetchProgressionData();
+  }, [selectedCategory, selectedExercise]);
+
+  useEffect(() => {
+    const fetchExercises = async () => {
+      if (selectedCategory === 'All') {
+        setAvailableExercises([]);
+        return;
+      }
+      try {
+        const exercises = await exerciseService.getExerciseNamesByCategory(selectedCategory);
+        setAvailableExercises(exercises);
+      } catch (err) {
+        console.error('Error fetching exercises for category:', err);
+        setAvailableExercises([]);
+      }
+    };
+
+    fetchExercises();
   }, [selectedCategory]);
 
-  ChartJS.register(ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarElement, Title);
-
   const handleCategoryChange = (event: any) => {
-    setSelectedCategory(event.target.value);
+    const newCategory = event.target.value;
+    setSelectedCategory(newCategory);
+    setSelectedExercise('All');
   };
+
+  const handleExerciseChange = (event: any) => {
+    setSelectedExercise(event.target.value);
+  };
+
+  const renderEmptyState = (message: string) => (
+    <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', p: 6 }}>
+      <Typography variant="h6" color="text.secondary">{message}</Typography>
+    </Box>
+  );
 
   if (loading) {
     return (
-      <Box sx={{ width: '100%', height: '70vh', p: 4, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      <Box sx={{ width: '100%', minHeight: '70vh', p: 4, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
         <CircularProgress />
       </Box>
     );
@@ -64,113 +113,15 @@ export const ChartsComponent: React.FC = () => {
 
   if (error) {
     return (
-      <Box sx={{ width: '100%', height: '70vh', p: 4, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      <Box sx={{ width: '100%', minHeight: '70vh', p: 4, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
         <Typography variant="h6" color="error">{error}</Typography>
       </Box>
     );
   }
 
-  //[[10, 20], [15, null], [20, 10]]
-
-  const data = {
-    labels: progressionData.map(item => `${item.category}: ${item.name}`),
-    datasets: [{
-      label: 'Weight',
-      data: progressionData.map(item => `${item.weight}`),
-      backgroundColor: 'rgba(54, 162, 235, 0.8)', 
-      borderColor: '#36A2EB',
-      borderWidth: 1,
-      hoverBackgroundColor: '#36a9eb',
-      hoverBorderColor: 'red',
-      hoverBorderWidth: 2
-    }]
-  };
-
-  const options = {
-    responsive: true,
-    plugins: {
-      legend: {
-        position: 'top' as const,
-      },
-      title: {
-        display: true,
-        text: selectedCategory === 'All' ? 'Max Weight per Exercise' : `Max Weight per Exercise - ${selectedCategory}`
-      },
-    },
-    scales: {
-      y: {
-        beginAtZero: true,
-        title: {
-          display: true,
-          text: 'Weight'
-        }
-      },
-      x: {
-        title: {
-          display: true,
-          text: 'Exercise'
-        },
-        ticks: {
-          font: {
-            size: 12,
-            weight: 'bold' as const
-          }
-        }
-      }
-    },
-  };
-
-  const usageChartData = {
-    labels: usageData.map(item => item.name),
-    datasets: [{
-      label: 'Exercises History Totals',
-      data: usageData.map(item => item.total),
-      backgroundColor: 'rgba(255, 99, 132, 0.8)',
-      borderColor: '#FF6384',
-      borderWidth: 1,
-      hoverBackgroundColor: '#ff7a9b',
-      hoverBorderColor: 'red',
-      hoverBorderWidth: 2
-    }]
-  };
-
-  const usageChartOptions = {
-    responsive: true,
-    plugins: {
-      legend: {
-        position: 'top' as const,
-      },
-      title: {
-        display: true,
-        text: selectedCategory === 'All' ? 'Exercise History Totals' : `Exercise History Totals - ${selectedCategory}`
-      },
-    },
-    scales: {
-      y: {
-        beginAtZero: true,
-        title: {
-          display: true,
-          text: 'Total Count'
-        }
-      },
-      x: {
-        title: {
-          display: true,
-          text: 'Exercise'
-        },
-        ticks: {
-          font: {
-            size: 12,
-            weight: 'bold' as const
-          }
-        }
-      }
-    },
-  };
-
   return (
     <Box sx={{ width: '100%', minHeight: '70vh', p: 4 }}>
-      <Box sx={{ mb: 3 }}>
+      <Box sx={{ mb: 3, display: 'flex', flexWrap: 'wrap', gap: 2 }}>
         <FormControl sx={{ minWidth: 200 }}>
           <InputLabel>Filter by Category</InputLabel>
           <Select
@@ -186,27 +137,102 @@ export const ChartsComponent: React.FC = () => {
             ))}
           </Select>
         </FormControl>
+        <FormControl sx={{ minWidth: 200 }} disabled={selectedCategory === 'All'}>
+          <InputLabel>Filter by Exercise</InputLabel>
+          <Select
+            value={selectedExercise}
+            label="Filter by Exercise"
+            onChange={handleExerciseChange}
+          >
+            <MenuItem value="All">All Exercises</MenuItem>
+            {availableExercises.map((exercise) => (
+              <MenuItem key={exercise} value={exercise}>
+                {exercise}
+              </MenuItem>
+            ))}
+          </Select>
+        </FormControl>
       </Box>
-      
-      {progressionData.length > 0 ? (
-        <Bar data={data} options={options} />
-      ) : (
-        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%' }}>
-          <Typography variant="h6">No progression data available</Typography>
-        </Box>
-      )}
 
-      {usageData.length > 0 && (
-        <Box sx={{ mt: 4 }}>
-          <Bar data={usageChartData} options={usageChartOptions} />
-        </Box>
-      )}
+      <Paper elevation={0} sx={{ mb: 4, p: 3, backgroundColor: 'rgba(255,255,255,0.03)', borderRadius: 3, border: '1px solid', borderColor: 'rgba(245,128,37,0.2)' }}>
+        <Typography variant="h4" sx={{ mb: 2 }}>
+          {selectedCategory === 'All'
+            ? 'Progression (Max Weight per Exercise)'
+            : selectedExercise === 'All'
+              ? `Progression - ${selectedCategory}`
+              : `Progression - ${selectedCategory} / ${selectedExercise}`}
+        </Typography>
+        {progressionData.length > 0 ? (
+          <TableContainer>
+            <Table size="small">
+              <TableHead>
+                <TableRow>
+                  <TableCell>Exercise</TableCell>
+                  <TableCell>Category</TableCell>
+                  <TableCell align="right">Max Weight</TableCell>
+                  <TableCell align="right">Reps</TableCell>
+                  <TableCell>Date</TableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {progressionData.map((item, index) => (
+                  <TableRow key={`${item.name}-${index}`} hover>
+                    <TableCell sx={{ fontWeight: 500 }}>{item.name || '—'}</TableCell>
+                    <TableCell>
+                      {item.category ? (
+                        <Chip label={item.category} size="small" color="primary" variant="outlined" />
+                      ) : '—'}
+                    </TableCell>
+                    <TableCell align="right">{item.weight ?? '—'}</TableCell>
+                    <TableCell align="right">{item.reps ?? '—'}</TableCell>
+                    <TableCell>{item.date ? new Date(item.date).toLocaleDateString() : '—'}</TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </TableContainer>
+        ) : (
+          renderEmptyState('No progression data available')
+        )}
+      </Paper>
 
-      {usageData.length === 0 && progressionData.length > 0 && (
-        <Box sx={{ mt: 4, display: 'flex', alignItems: 'center', justifyContent: 'center', height: '200px' }}>
-          <Typography variant="h6">No usage data available</Typography>
-        </Box>
-      )}
+      <Paper elevation={0} sx={{ p: 3, backgroundColor: 'rgba(255,255,255,0.03)', borderRadius: 3, border: '1px solid', borderColor: 'rgba(245,128,37,0.2)' }}>
+        <Typography variant="h4" sx={{ mb: 2 }}>
+          {selectedCategory === 'All'
+            ? 'Exercise Usage Totals'
+            : selectedExercise === 'All'
+              ? `Exercise Usage - ${selectedCategory}`
+              : `Exercise Usage - ${selectedCategory} / ${selectedExercise}`}
+        </Typography>
+        {usageData.length > 0 ? (
+          <TableContainer>
+            <Table size="small">
+              <TableHead>
+                <TableRow>
+                  <TableCell>Exercise</TableCell>
+                  <TableCell>Category</TableCell>
+                  <TableCell align="right">Total Sessions</TableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {usageData.map((item, index) => (
+                  <TableRow key={`${item.name}-${index}`} hover>
+                    <TableCell sx={{ fontWeight: 500 }}>{item.name || '—'}</TableCell>
+                    <TableCell>
+                      {item.category ? (
+                        <Chip label={item.category} size="small" color="secondary" variant="outlined" />
+                      ) : '—'}
+                    </TableCell>
+                    <TableCell align="right">{item.total ?? '—'}</TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </TableContainer>
+        ) : (
+          renderEmptyState('No usage data available')
+        )}
+      </Paper>
     </Box>
   );
 };

@@ -271,7 +271,7 @@ export const Home: React.FC = () => {
                           <Typography variant="subtitle2" color="text.secondary" sx={{ mb: 1 }}>
                             💪{' '}
                             <span style={{ color: 'rgb(245, 166, 35)' }}>
-                              <span>Recommended Exercises:</span>
+                              <span>Some options (you haven't done these in awhile):</span>
                             </span>
                           </Typography>
                           <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
@@ -292,7 +292,7 @@ export const Home: React.FC = () => {
                           <Typography variant="subtitle2" color="text.secondary" sx={{ mb: 1 }}>
                             💪{' '}
                             <span style={{ color: 'rgb(245, 166, 35)' }}>
-                              Recommended Exercises:
+                            Some options (you haven't done these in awhile):
                             </span>
                           </Typography>
                           <Typography variant="body2" sx={{ fontStyle: 'italic', color: '#e0e0e0' }}>
