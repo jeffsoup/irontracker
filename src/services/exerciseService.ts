@@ -1,4 +1,3 @@
-import { supabase } from '../lib/supabase';
 import { Exercise, ExerciseFormData } from '../types/Exercise';
 import { getSupabase } from '../lib/supabase';
 
