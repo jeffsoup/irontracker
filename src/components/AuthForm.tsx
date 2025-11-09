@@ -194,9 +194,16 @@ export const AuthForm: React.FC = () => {
       <Card sx={{ maxWidth: 500, width: '100%', boxShadow: 3 }}>
         <CardContent sx={{ p: 0 }}>
           <Box sx={{ textAlign: 'center', p: 3, pb: 0 }}>
-            <Typography variant="h4" component="h1" sx={{ mb: 1, fontWeight: 'bold' }}>
-              💪 IronTracker
-            </Typography>
+            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 1, mb: 1 }}>
+              <img
+                src="https://cdn.builder.io/api/v1/image/assets%2F51cc6beedd56403385e006cba32cbc20%2F3149914a25fd44d8b9f9b79ff4e104d9?format=webp&width=800"
+                alt="IronTracker Logo"
+                style={{ height: '40px', width: 'auto' }}
+              />
+              <Typography variant="h4" component="h1" sx={{ fontWeight: 'bold' }}>
+                IronTracker
+              </Typography>
+            </Box>
             <Typography variant="body1" color="text.secondary">
               Track your fitness journey
             </Typography>
