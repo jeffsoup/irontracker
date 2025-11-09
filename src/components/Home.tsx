@@ -269,7 +269,10 @@ export const Home: React.FC = () => {
                       {exerciseRecommendations[category] && exerciseRecommendations[category].length > 0 ? (
                         <Box>
                           <Typography variant="subtitle2" color="text.secondary" sx={{ mb: 1 }}>
-                            💪 Recommended Exercises:
+                            💪{' '}
+                            <span style={{ color: 'rgb(245, 166, 35)' }}>
+                              <span>Recommended Exercises:</span>
+                            </span>
                           </Typography>
                           <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
                             {exerciseRecommendations[category].map((exercise, exIndex) => (
