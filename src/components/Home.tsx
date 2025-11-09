@@ -186,7 +186,7 @@ export const Home: React.FC = () => {
           <Card elevation={2}>
             <CardContent>
               <Typography variant="h5" component="h2" sx={{ mb: 2, fontWeight: 'bold', color: 'primary.main' }}>
-                🏋️ Last Workout Completed
+                Last Workout Completed
               </Typography>
               
               {lastWorkout.length > 0 ? (
