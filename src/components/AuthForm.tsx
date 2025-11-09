@@ -375,6 +375,20 @@ export const AuthForm: React.FC = () => {
                 onChange={(e) => setSignUpData({ ...signUpData, email: e.target.value })}
                 margin="normal"
                 required
+                sx={{
+                  '& .MuiOutlinedInput-root': {
+                    backgroundColor: '#fff',
+                    '& fieldset': { borderColor: '#ccc' },
+                    '&:hover fieldset': { borderColor: '#999' },
+                    '&.Mui-focused fieldset': { borderColor: '#1976d2' },
+                  },
+                  '& .MuiOutlinedInput-input': {
+                    color: 'rgb(155, 155, 155)',
+                  },
+                  '& .MuiFormLabel-root': {
+                    color: 'rgb(155, 155, 155)',
+                  },
+                }}
               />
               <TextField
                 fullWidth
