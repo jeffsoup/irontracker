@@ -15,6 +15,9 @@ import {
 } from '@mui/material';
 import { getSupabase } from '../lib/supabase';
 
+// Base site URL for auth redirects: prefer env var, fallback to current origin
+const SITE_URL = (import.meta as any).env?.VITE_SITE_URL || (typeof window !== 'undefined' ? window.location.origin : '');
+
 interface TabPanelProps {
   children?: React.ReactNode;
   index: number;
@@ -144,7 +147,7 @@ export const AuthForm: React.FC = () => {
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: import.meta.env.VITE_AUTH_REDIRECT_URL || `${window.location.origin}/`,
+          redirectTo: `${SITE_URL}/`,
           queryParams: {
             access_type: 'offline',
             prompt: 'consent'
@@ -169,7 +172,7 @@ export const AuthForm: React.FC = () => {
     try {
       const supabase = getSupabase();
       const { error } = await supabase.auth.resetPasswordForEmail(resetEmail, {
-        redirectTo: import.meta.env.VITE_AUTH_REDIRECT_URL || `${window.location.origin}/reset-password`
+        redirectTo: `${SITE_URL}/reset-password`
       });
 
       if (error) throw error;
