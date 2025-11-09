@@ -212,7 +212,7 @@ function App() {
                         fontWeight: 'bold'
                       }}
                     >
-                      {activeWorkout ? '🏁 FINISH WORKOUT' : '🚀 START WORKOUT'}
+                      {activeWorkout ? 'FINISH WORKOUT' : 'START WORKOUT'}
                     </Button>
                     <Button
                       variant="outlined"
