@@ -1,5 +1,5 @@
-import { supabase } from '../lib/supabase';
 import { Exercise, ExerciseFormData } from '../types/Exercise';
+import { getSupabase } from '../lib/supabase';
 
 interface RecommendedExercise {
   name: string;
@@ -8,11 +8,12 @@ interface RecommendedExercise {
 
 export const exerciseService = {
   async getExercises(): Promise<Exercise[]> {
+    const supabase = getSupabase();
     // Get the current user
     const { data: { user }, error: userError } = await supabase.auth.getUser();
-    if (userError) throw userError;
-    if (!user) throw new Error('User must be authenticated to get exercises');
-    
+    if (userError) return [];
+    if (!user) return [];
+
     const { data, error } = await supabase
       .from('exercises')
       .select(`
@@ -37,6 +38,7 @@ export const exerciseService = {
   },
 
   async getUniqueCategories(): Promise<string[]> {
+    const supabase = getSupabase();
     // Try to get categories from existing exercises in the current session
     // This bypasses potential RLS issues by using data we already have access to
     const { data: existingCategories, error: existingError } = await supabase
@@ -55,6 +57,7 @@ export const exerciseService = {
   },
 
   async getExerciseNamesByCategory(category: string): Promise<string[]> {
+    const supabase = getSupabase();
     // Get the current user
     const { data: { user }, error: userError } = await supabase.auth.getUser();
     if (userError) throw userError;
@@ -74,6 +77,7 @@ export const exerciseService = {
   },
 
   async getRecommendedExercises(category: string): Promise<RecommendedExercise[]> {
+    const supabase = getSupabase();
     // Get the current user
     const { data: { user }, error: userError } = await supabase.auth.getUser();
     if (userError) throw userError;
@@ -105,6 +109,7 @@ export const exerciseService = {
   },
 
   async getProgressionData(category?: string): Promise<any[]> {
+    const supabase = getSupabase();
     let query = supabase
       .from('progression_max')
       .select('category, name, weight, reps, date')
@@ -125,6 +130,7 @@ export const exerciseService = {
   },
 
   async getExerciseUsageData(category?: string): Promise<any[]> {
+    const supabase = getSupabase();
     let query = supabase
       .from('exercise_usage')
       .select('name, total, category')
@@ -143,7 +149,8 @@ export const exerciseService = {
 
   async addExercise(exercise: ExerciseFormData): Promise<Exercise> {
     console.log('Adding exercise:', exercise);
-    
+    const supabase = getSupabase();
+
     // Get the current user
     const { data: { user }, error: userError } = await supabase.auth.getUser();
     if (userError) throw userError;
@@ -171,7 +178,8 @@ export const exerciseService = {
 
   async deleteExercise(id: string): Promise<void> {
     console.log('Deleting exercise with id:', id);
-    
+    const supabase = getSupabase();
+
     // Get the current user
     const { data: { user }, error: userError } = await supabase.auth.getUser();
     if (userError) throw userError;
@@ -190,6 +198,7 @@ export const exerciseService = {
   },
 
   async getMostRecentExerciseForWorkout(workoutId: string) {
+    const supabase = getSupabase();
     const { data, error } = await supabase
       .from('exercises')
       .select('*')
@@ -202,6 +211,7 @@ export const exerciseService = {
   },
 
   async updateExercise(id: string, exercise: Partial<Exercise>): Promise<Exercise> {
+    const supabase = getSupabase();
     // Get the current user
     const { data: { user }, error: userError } = await supabase.auth.getUser();
     if (userError) throw userError;
@@ -228,4 +238,4 @@ export const exerciseService = {
       date: data.date ? new Date(data.date) : null
     };
   }
-}; 
+};
