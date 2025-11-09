@@ -18,6 +18,13 @@ import {
   Chip,
   TextField,
   Typography,
+  Button,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  Alert,
+  Tooltip,
 } from '@mui/material';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
@@ -28,8 +35,14 @@ import SaveIcon from '@mui/icons-material/Save';
 import CancelIcon from '@mui/icons-material/Cancel';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ExpandLessIcon from '@mui/icons-material/ExpandLess';
+import PhotoCameraIcon from '@mui/icons-material/PhotoCamera';
+import ImageIcon from '@mui/icons-material/Image';
+import CloseIcon from '@mui/icons-material/Close';
+import DeleteForeverIcon from '@mui/icons-material/DeleteForever';
 import { Exercise } from '../types/Exercise';
 import { exerciseService } from '../services/exerciseService';
+import { imageService } from '../services/imageService';
+import { supabase } from '../lib/supabase';
 import { format } from 'date-fns';
 
 interface ExerciseListProps {
@@ -62,6 +75,15 @@ export const ExerciseList: React.FC<ExerciseListProps> = ({ onDelete, activeWork
     rating: '',
   });
   const [expandedDates, setExpandedDates] = useState<{ [date: string]: boolean }>({});
+  const [selectedImage, setSelectedImage] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [imageDialogOpen, setImageDialogOpen] = useState(false);
+  const [imageError, setImageError] = useState<string | null>(null);
+  const [uploading, setUploading] = useState(false);
+  const [viewImageDialogOpen, setViewImageDialogOpen] = useState(false);
+  const [viewImageUrl, setViewImageUrl] = useState<string | null>(null);
+  const [viewImageExerciseId, setViewImageExerciseId] = useState<string | null>(null);
+  const [deletingImage, setDeletingImage] = useState(false);
 
   useEffect(() => {
     loadExercises();
@@ -113,26 +135,136 @@ export const ExerciseList: React.FC<ExerciseListProps> = ({ onDelete, activeWork
       weight: exercise.weight,
       rating: exercise.rating,
       notes: exercise.notes,
+      image_path: exercise.image_path,
     });
+    // Reset image state
+    setSelectedImage(null);
+    setImagePreview(null);
+    setImageError(null);
+  };
+
+  const handleImageSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    try {
+      imageService.validateImageFile(file);
+      setSelectedImage(file);
+      setImageError(null);
+      
+      // Create preview
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setImagePreview(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+      
+      setImageDialogOpen(true);
+    } catch (error: any) {
+      setImageError(error.message);
+      setSelectedImage(null);
+      setImagePreview(null);
+    }
+  };
+
+  const handleRemoveImage = () => {
+    setSelectedImage(null);
+    setImagePreview(null);
+    setImageDialogOpen(false);
+    setImageError(null);
+    // Also remove from edit form
+    if (editForm) {
+      setEditForm({ ...editForm, image_path: null });
+    }
+  };
+
+  const handleViewImage = (exercise: Exercise) => {
+    if (!exercise.image_path) return;
+    const imageUrl = imageService.getImageUrl(exercise.image_path);
+    setViewImageUrl(imageUrl);
+    setViewImageExerciseId(exercise.id);
+    setViewImageDialogOpen(true);
+  };
+
+  const handleDeleteExerciseImage = async (exerciseId: string, imagePath: string) => {
+    if (!imagePath) return;
+    const confirmDelete = window.confirm('Delete this exercise image? This action cannot be undone.');
+    if (!confirmDelete) return;
+
+    try {
+      setDeletingImage(true);
+      await imageService.deleteImage(imagePath);
+      const updatedExercise = await exerciseService.updateExercise(exerciseId, { image_path: null });
+      setExercises(prev => prev.map(ex => ex.id === exerciseId ? { ...ex, ...updatedExercise } : ex));
+
+      if (editingId === exerciseId) {
+        setEditForm(prev => prev ? { ...prev, image_path: null } : prev);
+      }
+
+      setSelectedImage(null);
+      setImagePreview(null);
+      setImageError(null);
+
+      if (viewImageExerciseId === exerciseId) {
+        setViewImageDialogOpen(false);
+        setViewImageUrl(null);
+        setViewImageExerciseId(null);
+      }
+    } catch (err: any) {
+      console.error('Error deleting exercise image:', err);
+      setImageError(err.message || 'Failed to delete exercise image');
+    } finally {
+      setDeletingImage(false);
+    }
   };
 
   const handleSave = async () => {
     if (!editingId || !editForm) return;
     try {
-      const updatedExercise = await exerciseService.updateExercise(editingId, editForm);
+      setUploading(true);
+      let updatedForm = { ...editForm };
+
+      // Upload new image if one was selected
+      if (selectedImage) {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) throw new Error('User must be authenticated to upload images');
+        
+        // Delete old image if it exists
+        if (editForm.image_path) {
+          try {
+            await imageService.deleteImage(editForm.image_path);
+          } catch (err) {
+            console.error('Error deleting old image:', err);
+          }
+        }
+        
+        const imagePath = await imageService.uploadImage(selectedImage, user.id);
+        updatedForm.image_path = imagePath;
+      }
+
+      const updatedExercise = await exerciseService.updateExercise(editingId, updatedForm);
       setExercises(exercises.map(ex => 
         ex.id === editingId ? { ...ex, ...updatedExercise } : ex
       ));
       setEditingId(null);
       setEditForm(null);
-    } catch (err) {
+      setSelectedImage(null);
+      setImagePreview(null);
+      setImageError(null);
+    } catch (err: any) {
       console.error('Error updating exercise:', err);
+      setImageError(err.message || 'Failed to update exercise');
+    } finally {
+      setUploading(false);
     }
   };
 
   const handleCancel = () => {
     setEditingId(null);
     setEditForm(null);
+    setSelectedImage(null);
+    setImagePreview(null);
+    setImageError(null);
   };
 
   const handleEditFormChange = (field: keyof Exercise, value: any) => {
@@ -236,6 +368,8 @@ export const ExerciseList: React.FC<ExerciseListProps> = ({ onDelete, activeWork
     );
   }
 
+  const viewedExercise = viewImageExerciseId ? exercises.find(ex => ex.id === viewImageExerciseId) || null : null;
+
   return (
     <Box sx={{ width: '100%', p: 4 }}>
       <Stack spacing={2} sx={{ mb: 3 }}>
@@ -306,6 +440,7 @@ export const ExerciseList: React.FC<ExerciseListProps> = ({ onDelete, activeWork
               <TableCell>Weight (lbs)</TableCell>
               <TableCell>Rating</TableCell>
               <TableCell>Notes</TableCell>
+              <TableCell>Image</TableCell>
               <TableCell>Workout</TableCell>
               <TableCell>Actions</TableCell>
             </TableRow>
@@ -321,15 +456,18 @@ export const ExerciseList: React.FC<ExerciseListProps> = ({ onDelete, activeWork
                   {/* Date Header Row */}
                   <TableRow>
                     <TableCell
-                      colSpan={9}
-                      sx={{
-                        bgcolor: 'grey.50',
+                      colSpan={10}
+                      sx={(theme) => ({
+                        backgroundColor: 'rgba(255, 255, 255, 0.04)',
                         py: 1,
-                        borderBottom: '2px solid',
-                        borderColor: 'grey.200',
+                        borderBottom: `2px solid ${theme.palette.divider}`,
                         cursor: 'pointer',
                         userSelect: 'none',
-                      }}
+                        transition: 'background-color 150ms ease',
+                        '&:hover': {
+                          backgroundColor: 'rgba(245, 128, 37, 0.08)',
+                        },
+                      })}
                       onClick={() => toggleDate(dateStr)}
                     >
                       <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
@@ -437,6 +575,85 @@ export const ExerciseList: React.FC<ExerciseListProps> = ({ onDelete, activeWork
                         )}
                       </TableCell>
                       <TableCell>
+                        {editingId === exercise.id ? (
+                          <Box>
+                            <input
+                              accept="image/*"
+                              style={{ display: 'none' }}
+                              id={`image-upload-edit-${exercise.id}`}
+                              type="file"
+                              onChange={handleImageSelect}
+                            />
+                            <label htmlFor={`image-upload-edit-${exercise.id}`}>
+                              <Button
+                                variant="outlined"
+                                component="span"
+                                size="small"
+                                startIcon={<PhotoCameraIcon />}
+                              >
+                                {editForm?.image_path || selectedImage ? 'Change' : 'Add'}
+                              </Button>
+                            </label>
+                            {(editForm?.image_path || imagePreview) && (
+                              <Box sx={{ mt: 1 }}>
+                                {imagePreview ? (
+                                  <img
+                                    src={imagePreview}
+                                    alt="Preview"
+                                    style={{
+                                      width: '60px',
+                                      height: '60px',
+                                      objectFit: 'cover',
+                                      borderRadius: '4px'
+                                    }}
+                                  />
+                                ) : editForm?.image_path ? (
+                                  <img
+                                    src={imageService.getImageUrl(editForm.image_path)}
+                                    alt="Exercise"
+                                    onError={() => {
+                                      console.error('Error loading image:', editForm.image_path);
+                                    }}
+                                    style={{
+                                      width: '60px',
+                                      height: '60px',
+                                      objectFit: 'cover',
+                                      borderRadius: '4px'
+                                    }}
+                                  />
+                                ) : null}
+                              </Box>
+                            )}
+                          </Box>
+                        ) : (
+                          exercise.image_path ? (
+                            <Box sx={{ display: 'flex', gap: 0.5 }}>
+                              <Tooltip title="View Image">
+                                <IconButton
+                                  size="small"
+                                  onClick={() => handleViewImage(exercise)}
+                                  color="primary"
+                                >
+                                  <ImageIcon />
+                                </IconButton>
+                              </Tooltip>
+                              <Tooltip title={deletingImage ? 'Deleting...' : 'Delete Image'}>
+                                <span>
+                                  <IconButton
+                                    size="small"
+                                    color="error"
+                                    disabled={deletingImage}
+                                    onClick={() => handleDeleteExerciseImage(exercise.id, exercise.image_path!)}
+                                  >
+                                    <DeleteForeverIcon />
+                                  </IconButton>
+                                </span>
+                              </Tooltip>
+                            </Box>
+                          ) : null
+                        )}
+                      </TableCell>
+                      <TableCell>
                         {exercise.workoutCategories ? (
                           <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
                             {exercise.workoutCategories.map((cat) => (
@@ -458,6 +675,7 @@ export const ExerciseList: React.FC<ExerciseListProps> = ({ onDelete, activeWork
                               onClick={handleSave}
                               size="small"
                               color="primary"
+                              disabled={uploading}
                             >
                               <SaveIcon />
                             </IconButton>
@@ -465,6 +683,7 @@ export const ExerciseList: React.FC<ExerciseListProps> = ({ onDelete, activeWork
                               onClick={handleCancel}
                               size="small"
                               color="error"
+                              disabled={uploading}
                             >
                               <CancelIcon />
                             </IconButton>
@@ -496,6 +715,115 @@ export const ExerciseList: React.FC<ExerciseListProps> = ({ onDelete, activeWork
           </TableBody>
         </Table>
       </TableContainer>
+
+      {/* Image Upload Error */}
+      {imageError && (
+        <Alert severity="error" sx={{ mt: 2 }}>
+          {imageError}
+        </Alert>
+      )}
+
+      {/* Image Preview Dialog (for editing) */}
+      <Dialog
+        open={imageDialogOpen}
+        onClose={() => setImageDialogOpen(false)}
+        maxWidth="md"
+        fullWidth
+      >
+        <DialogTitle>
+          Image Preview
+          <IconButton
+            onClick={() => setImageDialogOpen(false)}
+            sx={{
+              position: 'absolute',
+              right: 8,
+              top: 8,
+            }}
+          >
+            <CloseIcon />
+          </IconButton>
+        </DialogTitle>
+        <DialogContent>
+          {imagePreview && (
+            <Box sx={{ display: 'flex', justifyContent: 'center', p: 2 }}>
+              <img
+                src={imagePreview}
+                alt="Preview"
+                style={{
+                  maxWidth: '100%',
+                  maxHeight: '500px',
+                  objectFit: 'contain'
+                }}
+              />
+            </Box>
+          )}
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleRemoveImage} color="error">
+            Remove Image
+          </Button>
+          <Button onClick={() => setImageDialogOpen(false)} variant="contained">
+            Looks Good
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* View Image Dialog */}
+      <Dialog
+        open={viewImageDialogOpen}
+        onClose={() => setViewImageDialogOpen(false)}
+        maxWidth="lg"
+        fullWidth
+      >
+        <DialogTitle>
+          Exercise Image
+          <IconButton
+            onClick={() => setViewImageDialogOpen(false)}
+            sx={{
+              position: 'absolute',
+              right: 8,
+              top: 8,
+            }}
+          >
+            <CloseIcon />
+          </IconButton>
+        </DialogTitle>
+        <DialogContent>
+          {viewImageUrl && (
+            <Box sx={{ display: 'flex', justifyContent: 'center', p: 2 }}>
+              <img
+                src={viewImageUrl}
+                alt="Exercise"
+                onError={() => {
+                  console.error('Error loading image:', viewImageUrl);
+                  setImageError('Failed to load image. Please ensure the storage bucket is set to public in Supabase.');
+                }}
+                style={{
+                  maxWidth: '100%',
+                  maxHeight: '80vh',
+                  objectFit: 'contain'
+                }}
+              />
+            </Box>
+          )}
+        </DialogContent>
+        <DialogActions>
+          {viewedExercise?.image_path && (
+            <Button
+              onClick={() => handleDeleteExerciseImage(viewedExercise.id, viewedExercise.image_path!)}
+              color="error"
+              variant="outlined"
+              startIcon={<DeleteForeverIcon />}
+              disabled={deletingImage}
+            >
+              Delete Image
+            </Button>
+          )}
+          <Button onClick={() => setViewImageDialogOpen(false)} variant="contained" disabled={deletingImage}>
+            Close
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 };

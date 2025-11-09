@@ -177,7 +177,7 @@ export const Home: React.FC = () => {
   return (
     <Box sx={{ p: 3 }}>
       <Typography variant="h4" component="h1" sx={{ mb: 4, fontWeight: 'bold', color: '#ffffff' }}>
-        🏠 Welcome to IronTracker
+        Welcome to IronTracker
       </Typography>
 
       <Grid container spacing={3}>
@@ -186,7 +186,7 @@ export const Home: React.FC = () => {
           <Card elevation={2}>
             <CardContent>
               <Typography variant="h5" component="h2" sx={{ mb: 2, fontWeight: 'bold', color: 'primary.main' }}>
-                🏋️ Last Workout Completed
+                Last Workout Completed
               </Typography>
               
               {lastWorkout.length > 0 ? (
@@ -269,7 +269,10 @@ export const Home: React.FC = () => {
                       {exerciseRecommendations[category] && exerciseRecommendations[category].length > 0 ? (
                         <Box>
                           <Typography variant="subtitle2" color="text.secondary" sx={{ mb: 1 }}>
-                            💪 Recommended Exercises:
+                            💪{' '}
+                            <span style={{ color: 'rgb(245, 166, 35)' }}>
+                              <span>Some options (you haven't done these in awhile):</span>
+                            </span>
                           </Typography>
                           <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
                             {exerciseRecommendations[category].map((exercise, exIndex) => (
@@ -287,7 +290,10 @@ export const Home: React.FC = () => {
                       ) : (
                         <Box>
                           <Typography variant="subtitle2" color="text.secondary" sx={{ mb: 1 }}>
-                            💪 Recommended Exercises:
+                            💪{' '}
+                            <span style={{ color: 'rgb(245, 166, 35)' }}>
+                            Some options (you haven't done these in awhile):
+                            </span>
                           </Typography>
                           <Typography variant="body2" sx={{ fontStyle: 'italic', color: '#e0e0e0' }}>
                             No specific exercises found for this category yet. Start working out to build recommendations!

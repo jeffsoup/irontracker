@@ -8,7 +8,7 @@ import { Home } from './Home';
 import { Profile } from './Profile';
 import { ExerciseFormData, Workout } from '../types/Exercise';
 import { exerciseService } from '../services/exerciseService';
-import { supabase } from '../lib/supabase';
+import { getSupabase } from '../lib/supabase';
 
 interface ExerciseTabsProps {
   onDelete: (id: string) => void;
@@ -152,7 +152,7 @@ export const AuthForm = () => {
   const handleSignUp = async () => {
     setLoading(true);
     setError(null);
-    const { error } = await supabase.auth.signUp({ email, password });
+    const { error } = await getSupabase().auth.signUp({ email, password });
     setLoading(false);
     if (error) setError(error.message);
     else alert('Check your email for a confirmation link!');
@@ -161,7 +161,7 @@ export const AuthForm = () => {
   const handleSignIn = async () => {
     setLoading(true);
     setError(null);
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    const { error } = await getSupabase().auth.signInWithPassword({ email, password });
     setLoading(false);
     if (error) setError(error.message);
   };
@@ -169,7 +169,7 @@ export const AuthForm = () => {
   const handleGoogleSignIn = async () => {
     setLoading(true);
     setError(null);
-    const { error } = await supabase.auth.signInWithOAuth({ provider: 'google' });
+    const { error } = await getSupabase().auth.signInWithOAuth({ provider: 'google' });
     setLoading(false);
     if (error) setError(error.message);
   };

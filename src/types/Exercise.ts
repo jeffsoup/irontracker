@@ -10,6 +10,7 @@ export interface Exercise {
   workout: string | null;  // Reference to the workout ID
   created_at: Date;
   workoutCategories: string[] | null;  // Categories from the associated workout
+  image_path: string | null;  // Path to uploaded image in Supabase Storage
 }
 
 export interface ExerciseFormData {
@@ -21,6 +22,7 @@ export interface ExerciseFormData {
   rating: number | null;
   notes: string | null;
   workout: string | null;
+  image_path?: string | null;
 }
 
 export interface Workout {
