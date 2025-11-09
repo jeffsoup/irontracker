@@ -183,12 +183,12 @@ export const AuthForm: React.FC = () => {
   };
 
   return (
-    <Box sx={{ 
-      minHeight: '100vh', 
-      display: 'flex', 
-      alignItems: 'center', 
+    <Box sx={{
+      minHeight: '100vh',
+      display: 'flex',
+      alignItems: 'center',
       justifyContent: 'center',
-      background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+      backgroundColor: 'rgba(74, 74, 74, 0.52)',
       p: 2
     }}>
       <Card sx={{ maxWidth: 500, width: '100%', boxShadow: 3 }}>
