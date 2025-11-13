@@ -277,11 +277,23 @@ export const ExerciseForm: React.FC<ExerciseFormProps> = ({ onSubmit, activeWork
   }
 
   return (
-    <Box component="form" onSubmit={handleSubmit} sx={{ maxWidth: 500, mx: 'auto', p: 4 }} className="fitness-card">
+    <Box 
+      component="form" 
+      onSubmit={handleSubmit} 
+      sx={{ 
+        maxWidth: 500, 
+        width: '100%',
+        mx: 'auto', 
+        p: { xs: 2, sm: 4 },
+        boxSizing: 'border-box',
+        overflowX: 'hidden'
+      }} 
+      className="fitness-card"
+    >
       <Typography variant="h2" component="h2" gutterBottom sx={{ mb: 4 }}>
         🔥 Add New Set
       </Typography>
-      <Stack spacing={4}>
+      <Stack spacing={4} sx={{ width: '100%', boxSizing: 'border-box' }}>
         <FormControl fullWidth required>
           <InputLabel>Category</InputLabel>
           <Select
@@ -297,11 +309,28 @@ export const ExerciseForm: React.FC<ExerciseFormProps> = ({ onSubmit, activeWork
           </Select>
         </FormControl>
         {formData.category && recommendedExercises.length > 0 && (
-          <Paper elevation={0} sx={{ p: 2, bgcolor: 'background.default' }}>
+          <Paper 
+            elevation={0} 
+            sx={{ 
+              p: 2, 
+              bgcolor: 'background.default',
+              width: '100%',
+              boxSizing: 'border-box',
+              overflow: 'hidden'
+            }}
+          >
             <Typography variant="subtitle2" color="text.secondary" gutterBottom>
               Recommended Exercises (Least Recently Used):
             </Typography>
-            <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
+            <Box 
+              sx={{ 
+                display: 'flex', 
+                gap: 1, 
+                flexWrap: 'wrap',
+                width: '100%',
+                boxSizing: 'border-box'
+              }}
+            >
               {recommendedExercises.map((exercise) => (
                 <Chip
                   key={exercise.name}
@@ -310,6 +339,7 @@ export const ExerciseForm: React.FC<ExerciseFormProps> = ({ onSubmit, activeWork
                   color="primary"
                   variant="outlined"
                   clickable
+                  sx={{ maxWidth: '100%' }}
                 />
               ))}
             </Box>
@@ -322,11 +352,13 @@ export const ExerciseForm: React.FC<ExerciseFormProps> = ({ onSubmit, activeWork
           onChange={(_, newValue) => handleExerciseChange(newValue)}
           onInputChange={(_, newInputValue) => handleExerciseChange(newInputValue)}
           disabled={!formData.category}
+          sx={{ width: '100%' }}
           renderInput={(params) => (
             <TextField
               {...params}
               label="Exercise"
               required
+              fullWidth
               helperText={formData.category ? "Select an existing exercise or type a new one" : "Select a category first"}
             />
           )}

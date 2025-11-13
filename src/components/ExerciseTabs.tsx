@@ -32,10 +32,11 @@ function TabPanel(props: TabPanelProps) {
       hidden={value !== index}
       id={`exercise-tabpanel-${index}`}
       aria-labelledby={`exercise-tab-${index}`}
+      style={{ width: '100%', overflowX: 'hidden' }}
       {...other}
     >
       {value === index && (
-        <Box sx={{ p: 0 }}>
+        <Box sx={{ p: 0, width: '100%', overflowX: 'hidden' }}>
           {children}
         </Box>
       )}
@@ -110,7 +111,7 @@ export const ExerciseTabs: React.FC<ExerciseTabsProps> = ({
           <Tab label="💥 Add Set" disabled={!activeWorkout} />
           <Tab label="🏋️ Workouts" />
           <Tab label="📊 History" />
-          <Tab label="📈 Charts" />
+          <Tab label="📈 Progression" />
           <Tab label="👤 Profile" />
         </Tabs>
       </Box>

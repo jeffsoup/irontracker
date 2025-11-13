@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import {
   Box,
   Typography,
@@ -15,8 +15,13 @@ import {
   TableRow,
   Paper,
   Chip,
+  TableSortLabel,
 } from '@mui/material';
 import { exerciseService } from '../services/exerciseService';
+
+type SortOrder = 'asc' | 'desc';
+type ProgressionSortField = 'name' | 'category' | 'weight' | 'reps' | 'date';
+type UsageSortField = 'name' | 'category' | 'total';
 
 export const ChartsComponent: React.FC = () => {
   const [progressionData, setProgressionData] = useState<any[]>([]);
@@ -27,6 +32,10 @@ export const ChartsComponent: React.FC = () => {
   const [selectedExercise, setSelectedExercise] = useState<string>('All');
   const [availableCategories, setAvailableCategories] = useState<string[]>([]);
   const [availableExercises, setAvailableExercises] = useState<string[]>([]);
+  const [progressionSortField, setProgressionSortField] = useState<ProgressionSortField>('date');
+  const [progressionSortOrder, setProgressionSortOrder] = useState<SortOrder>('desc');
+  const [usageSortField, setUsageSortField] = useState<UsageSortField>('total');
+  const [usageSortOrder, setUsageSortOrder] = useState<SortOrder>('desc');
 
   useEffect(() => {
     const fetchCategories = async () => {
@@ -96,6 +105,94 @@ export const ChartsComponent: React.FC = () => {
   const handleExerciseChange = (event: any) => {
     setSelectedExercise(event.target.value);
   };
+
+  const handleProgressionSort = (field: ProgressionSortField) => {
+    const isAsc = progressionSortField === field && progressionSortOrder === 'asc';
+    setProgressionSortField(field);
+    setProgressionSortOrder(isAsc ? 'desc' : 'asc');
+  };
+
+  const handleUsageSort = (field: UsageSortField) => {
+    const isAsc = usageSortField === field && usageSortOrder === 'asc';
+    setUsageSortField(field);
+    setUsageSortOrder(isAsc ? 'desc' : 'asc');
+  };
+
+  const sortedProgressionData = useMemo(() => {
+    const sorted = [...progressionData];
+    sorted.sort((a, b) => {
+      let aValue: any;
+      let bValue: any;
+
+      switch (progressionSortField) {
+        case 'name':
+          aValue = (a.name || '').toLowerCase();
+          bValue = (b.name || '').toLowerCase();
+          break;
+        case 'category':
+          aValue = (a.category || '').toLowerCase();
+          bValue = (b.category || '').toLowerCase();
+          break;
+        case 'weight':
+          aValue = a.weight ?? 0;
+          bValue = b.weight ?? 0;
+          break;
+        case 'reps':
+          aValue = a.reps ?? 0;
+          bValue = b.reps ?? 0;
+          break;
+        case 'date':
+          aValue = a.date ? new Date(a.date).getTime() : 0;
+          bValue = b.date ? new Date(b.date).getTime() : 0;
+          break;
+        default:
+          return 0;
+      }
+
+      if (aValue < bValue) {
+        return progressionSortOrder === 'asc' ? -1 : 1;
+      }
+      if (aValue > bValue) {
+        return progressionSortOrder === 'asc' ? 1 : -1;
+      }
+      return 0;
+    });
+    return sorted;
+  }, [progressionData, progressionSortField, progressionSortOrder]);
+
+  const sortedUsageData = useMemo(() => {
+    const sorted = [...usageData];
+    sorted.sort((a, b) => {
+      let aValue: any;
+      let bValue: any;
+
+      switch (usageSortField) {
+        case 'name':
+          aValue = (a.name || '').toLowerCase();
+          bValue = (b.name || '').toLowerCase();
+          break;
+        case 'category':
+          aValue = (a.category || '').toLowerCase();
+          bValue = (b.category || '').toLowerCase();
+          break;
+        case 'total':
+          aValue = a.total ?? 0;
+          bValue = b.total ?? 0;
+          break;
+        default:
+          return 0;
+      }
+
+      if (aValue < bValue) {
+        return usageSortOrder === 'asc' ? -1 : 1;
+      }
+      if (aValue > bValue) {
+        return usageSortOrder === 'asc' ? 1 : -1;
+      }
+      return 0;
+    });
+    return sorted;
+  }, [usageData, usageSortField, usageSortOrder]);
 
   const renderEmptyState = (message: string) => (
     <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', p: 6 }}>
@@ -167,15 +264,95 @@ export const ChartsComponent: React.FC = () => {
             <Table size="small">
               <TableHead>
                 <TableRow>
-                  <TableCell>Exercise</TableCell>
-                  <TableCell>Category</TableCell>
-                  <TableCell align="right">Max Weight</TableCell>
-                  <TableCell align="right">Reps</TableCell>
-                  <TableCell>Date</TableCell>
+                  <TableCell>
+                    <TableSortLabel
+                      active={progressionSortField === 'name'}
+                      direction={progressionSortField === 'name' ? progressionSortOrder : 'asc'}
+                      onClick={() => handleProgressionSort('name')}
+                      sx={{
+                        '&.Mui-active': {
+                          color: '#6f9c3d',
+                        },
+                        '&:hover': {
+                          color: '#6f9c3d',
+                        },
+                      }}
+                    >
+                      Exercise
+                    </TableSortLabel>
+                  </TableCell>
+                  <TableCell>
+                    <TableSortLabel
+                      active={progressionSortField === 'category'}
+                      direction={progressionSortField === 'category' ? progressionSortOrder : 'asc'}
+                      onClick={() => handleProgressionSort('category')}
+                      sx={{
+                        '&.Mui-active': {
+                          color: '#6f9c3d',
+                        },
+                        '&:hover': {
+                          color: '#6f9c3d',
+                        },
+                      }}
+                    >
+                      Category
+                    </TableSortLabel>
+                  </TableCell>
+                  <TableCell align="right">
+                    <TableSortLabel
+                      active={progressionSortField === 'weight'}
+                      direction={progressionSortField === 'weight' ? progressionSortOrder : 'asc'}
+                      onClick={() => handleProgressionSort('weight')}
+                      sx={{
+                        '&.Mui-active': {
+                          color: '#6f9c3d',
+                        },
+                        '&:hover': {
+                          color: '#6f9c3d',
+                        },
+                      }}
+                    >
+                      Max Weight
+                    </TableSortLabel>
+                  </TableCell>
+                  <TableCell align="right">
+                    <TableSortLabel
+                      active={progressionSortField === 'reps'}
+                      direction={progressionSortField === 'reps' ? progressionSortOrder : 'asc'}
+                      onClick={() => handleProgressionSort('reps')}
+                      sx={{
+                        '&.Mui-active': {
+                          color: '#6f9c3d',
+                        },
+                        '&:hover': {
+                          color: '#6f9c3d',
+                        },
+                      }}
+                    >
+                      Reps
+                    </TableSortLabel>
+                  </TableCell>
+                  <TableCell>
+                    <TableSortLabel
+                      active={progressionSortField === 'date'}
+                      direction={progressionSortField === 'date' ? progressionSortOrder : 'asc'}
+                      onClick={() => handleProgressionSort('date')}
+                      sx={{
+                        '&.Mui-active': {
+                          color: '#6f9c3d',
+                        },
+                        '&:hover': {
+                          color: '#6f9c3d',
+                        },
+                      }}
+                    >
+                      Date
+                    </TableSortLabel>
+                  </TableCell>
                 </TableRow>
               </TableHead>
               <TableBody>
-                {progressionData.map((item, index) => (
+                {sortedProgressionData.map((item, index) => (
                   <TableRow key={`${item.name}-${index}`} hover>
                     <TableCell sx={{ fontWeight: 500 }}>{item.name || '—'}</TableCell>
                     <TableCell>
@@ -209,13 +386,61 @@ export const ChartsComponent: React.FC = () => {
             <Table size="small">
               <TableHead>
                 <TableRow>
-                  <TableCell>Exercise</TableCell>
-                  <TableCell>Category</TableCell>
-                  <TableCell align="right">Total Sessions</TableCell>
+                  <TableCell>
+                    <TableSortLabel
+                      active={usageSortField === 'name'}
+                      direction={usageSortField === 'name' ? usageSortOrder : 'asc'}
+                      onClick={() => handleUsageSort('name')}
+                      sx={{
+                        '&.Mui-active': {
+                          color: '#6f9c3d',
+                        },
+                        '&:hover': {
+                          color: '#6f9c3d',
+                        },
+                      }}
+                    >
+                      Exercise
+                    </TableSortLabel>
+                  </TableCell>
+                  <TableCell>
+                    <TableSortLabel
+                      active={usageSortField === 'category'}
+                      direction={usageSortField === 'category' ? usageSortOrder : 'asc'}
+                      onClick={() => handleUsageSort('category')}
+                      sx={{
+                        '&.Mui-active': {
+                            color: '#6f9c3d',
+                        },
+                        '&:hover': {
+                          color: '#6f9c3d',
+                        },
+                      }}
+                    >
+                      Category
+                    </TableSortLabel>
+                  </TableCell>
+                  <TableCell align="right">
+                    <TableSortLabel
+                      active={usageSortField === 'total'}
+                      direction={usageSortField === 'total' ? usageSortOrder : 'asc'}
+                      onClick={() => handleUsageSort('total')}
+                      sx={{
+                        '&.Mui-active': {
+                          color: '#6f9c3d',
+                        },
+                        '&:hover': {
+                          color: '#6f9c3d',
+                        },
+                      }}
+                    >
+                      Total Sessions
+                    </TableSortLabel>
+                  </TableCell>
                 </TableRow>
               </TableHead>
               <TableBody>
-                {usageData.map((item, index) => (
+                {sortedUsageData.map((item, index) => (
                   <TableRow key={`${item.name}-${index}`} hover>
                     <TableCell sx={{ fontWeight: 500 }}>{item.name || '—'}</TableCell>
                     <TableCell>
