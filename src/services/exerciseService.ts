@@ -237,5 +237,79 @@ export const exerciseService = {
       ...data,
       date: data.date ? new Date(data.date) : null
     };
+  },
+
+  async getExerciseHistoryByName(exerciseName: string): Promise<Exercise[]> {
+    const supabase = getSupabase();
+    // Get the current user
+    const { data: { user }, error: userError } = await supabase.auth.getUser();
+    if (userError) throw userError;
+    if (!user) throw new Error('User must be authenticated to get exercise history');
+    
+    const { data, error } = await supabase
+      .from('exercises')
+      .select('*')
+      .eq('name', exerciseName)
+      .eq('user_id', user.id)
+      .order('date', { ascending: true });
+
+    if (error) throw error;
+    
+    return data?.map(exercise => ({
+      ...exercise,
+      date: exercise.date ? new Date(exercise.date) : null
+    })) || [];
+  },
+
+  async getExerciseHistoryAggregatedByName(exerciseName: string): Promise<any[]> {
+    const supabase = getSupabase();
+    // Get the current user
+    const { data: { user }, error: userError } = await supabase.auth.getUser();
+    if (userError) throw userError;
+    if (!user) throw new Error('User must be authenticated to get exercise history');
+    
+    // Fetch all exercises for this name
+    const { data, error } = await supabase
+      .from('exercises')
+      .select('*')
+      .eq('name', exerciseName)
+      .eq('user_id', user.id)
+      .order('date', { ascending: true });
+
+    if (error) throw error;
+    
+    if (!data || data.length === 0) return [];
+
+    // Group by date and aggregate
+    const groupedByDate = new Map<string, any>();
+    
+    data.forEach(exercise => {
+      const date = exercise.date ? new Date(exercise.date).toISOString().split('T')[0] : null;
+      if (!date) return;
+      
+      const weight = exercise.weight ?? 0;
+      const reps = exercise.reps ?? 0;
+      const volume = weight * reps;
+      
+      if (!groupedByDate.has(date)) {
+        groupedByDate.set(date, {
+          exercise_date: date,
+          name: exercise.name,
+          total_volume: 0,
+          top_weight: 0,
+          top_reps: 0,
+        });
+      }
+      
+      const dayData = groupedByDate.get(date);
+      dayData.total_volume += volume;
+      dayData.top_weight = Math.max(dayData.top_weight, weight);
+      dayData.top_reps = Math.max(dayData.top_reps, reps);
+    });
+    
+    // Convert map to array and sort by date descending
+    return Array.from(groupedByDate.values())
+      .sort((a, b) => new Date(b.exercise_date).getTime() - new Date(a.exercise_date).getTime())
+      .reverse(); // Reverse to get ascending order
   }
 };
