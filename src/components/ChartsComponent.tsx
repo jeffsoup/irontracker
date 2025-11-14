@@ -16,8 +16,33 @@ import {
   Paper,
   Chip,
   TableSortLabel,
+  Button,
+  Link,
 } from '@mui/material';
+import ArrowBackIcon from '@mui/icons-material/ArrowBack';
+import { Line } from 'react-chartjs-2';
+import {
+  Chart as ChartJS,
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  Title,
+  Tooltip,
+  Legend,
+} from 'chart.js';
 import { exerciseService } from '../services/exerciseService';
+import { format } from 'date-fns';
+
+ChartJS.register(
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  Title,
+  Tooltip,
+  Legend
+);
 
 type SortOrder = 'asc' | 'desc';
 type ProgressionSortField = 'name' | 'category' | 'weight' | 'reps' | 'date';
@@ -36,6 +61,9 @@ export const ChartsComponent: React.FC = () => {
   const [progressionSortOrder, setProgressionSortOrder] = useState<SortOrder>('desc');
   const [usageSortField, setUsageSortField] = useState<UsageSortField>('total');
   const [usageSortOrder, setUsageSortOrder] = useState<SortOrder>('desc');
+  const [drillDownExercise, setDrillDownExercise] = useState<string | null>(null);
+  const [exerciseHistoryAggregated, setExerciseHistoryAggregated] = useState<any[]>([]);
+  const [loadingHistory, setLoadingHistory] = useState(false);
 
   useEffect(() => {
     const fetchCategories = async () => {
@@ -116,6 +144,25 @@ export const ChartsComponent: React.FC = () => {
     const isAsc = usageSortField === field && usageSortOrder === 'asc';
     setUsageSortField(field);
     setUsageSortOrder(isAsc ? 'desc' : 'asc');
+  };
+
+  const handleExerciseClick = async (exerciseName: string) => {
+    setDrillDownExercise(exerciseName);
+    setLoadingHistory(true);
+    try {
+      const aggregated = await exerciseService.getExerciseHistoryAggregatedByName(exerciseName);
+      setExerciseHistoryAggregated(aggregated);
+    } catch (err) {
+      console.error('Error fetching exercise history:', err);
+      setError('Failed to load exercise history');
+    } finally {
+      setLoadingHistory(false);
+    }
+  };
+
+  const handleBackToCharts = () => {
+    setDrillDownExercise(null);
+    setExerciseHistoryAggregated([]);
   };
 
   const sortedProgressionData = useMemo(() => {
@@ -199,6 +246,208 @@ export const ChartsComponent: React.FC = () => {
       <Typography variant="h6" color="text.secondary">{message}</Typography>
     </Box>
   );
+
+  // Prepare chart data for drill-down view using aggregated data
+  const chartData = useMemo(() => {
+    if (!exerciseHistoryAggregated.length) {
+      return { weightData: null, repsData: null, volumeData: null };
+    }
+
+    const labels = exerciseHistoryAggregated.map(item => 
+      format(new Date(item.exercise_date), 'MMM d, yyyy')
+    );
+    const weights = exerciseHistoryAggregated.map(item => item.top_weight ?? 0);
+    const reps = exerciseHistoryAggregated.map(item => item.top_reps ?? 0);
+    const volumes = exerciseHistoryAggregated.map(item => item.total_volume ?? 0);
+
+    const weightData = {
+      labels,
+      datasets: [
+        {
+          label: 'Max Weight (lbs)',
+          data: weights,
+          borderColor: '#f58025',
+          backgroundColor: 'rgba(245, 128, 37, 0.1)',
+          tension: 0.4,
+          pointRadius: 4,
+          pointHoverRadius: 6,
+        },
+      ],
+    };
+
+    const repsData = {
+      labels,
+      datasets: [
+        {
+          label: 'Max Reps',
+          data: reps,
+          borderColor: '#6f9c3d',
+          backgroundColor: 'rgba(111, 156, 61, 0.1)',
+          tension: 0.4,
+          pointRadius: 4,
+          pointHoverRadius: 6,
+        },
+      ],
+    };
+
+    const volumeData = {
+      labels,
+      datasets: [
+        {
+          label: 'Total Volume (lbs)',
+          data: volumes,
+          borderColor: '#00d4ff',
+          backgroundColor: 'rgba(0, 212, 255, 0.1)',
+          tension: 0.4,
+          pointRadius: 4,
+          pointHoverRadius: 6,
+        },
+      ],
+    };
+
+    return { weightData, repsData, volumeData };
+  }, [exerciseHistoryAggregated]);
+
+  const chartOptions = {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: {
+        display: true,
+        labels: {
+          color: '#ffffff',
+        },
+      },
+      tooltip: {
+        backgroundColor: 'rgba(0, 0, 0, 0.8)',
+        titleColor: '#ffffff',
+        bodyColor: '#ffffff',
+        borderColor: '#f58025',
+        borderWidth: 1,
+      },
+    },
+    scales: {
+      x: {
+        ticks: {
+          color: '#ffffff',
+          maxRotation: 45,
+          minRotation: 45,
+        },
+        grid: {
+          color: 'rgba(255, 255, 255, 0.1)',
+        },
+      },
+      y: {
+        ticks: {
+          color: '#ffffff',
+        },
+        grid: {
+          color: 'rgba(255, 255, 255, 0.1)',
+        },
+      },
+    },
+  };
+
+  // Render drill-down view
+  if (drillDownExercise) {
+    return (
+      <Box sx={{ width: '100%', minHeight: '70vh', p: 4 }}>
+        <Button
+          startIcon={<ArrowBackIcon />}
+          onClick={handleBackToCharts}
+          sx={{ mb: 3, color: '#6f9c3d' }}
+        >
+          Back to Charts
+        </Button>
+
+        <Typography variant="h3" sx={{ mb: 4 }}>
+          {drillDownExercise} - Exercise History
+        </Typography>
+
+        {loadingHistory ? (
+          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', p: 6 }}>
+            <CircularProgress />
+          </Box>
+        ) : exerciseHistoryAggregated.length === 0 ? (
+          renderEmptyState('No history available for this exercise')
+        ) : (
+          <>
+            {/* Charts */}
+            <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' }, gap: 3, mb: 4 }}>
+              <Paper elevation={0} sx={{ p: 3, backgroundColor: 'rgba(255,255,255,0.03)', borderRadius: 3, border: '1px solid', borderColor: 'rgba(245,128,37,0.2)' }}>
+                <Typography variant="h5" sx={{ mb: 2 }}>
+                  Max weight (lbs) per session
+                </Typography>
+                <Box sx={{ height: 300 }}>
+                  {chartData.weightData && (
+                    <Line data={chartData.weightData} options={chartOptions} />
+                  )}
+                </Box>
+              </Paper>
+
+              <Paper elevation={0} sx={{ p: 3, backgroundColor: 'rgba(255,255,255,0.03)', borderRadius: 3, border: '1px solid', borderColor: 'rgba(245,128,37,0.2)' }}>
+                <Typography variant="h5" sx={{ mb: 2 }}>
+                  Max reps per session
+                </Typography>
+                <Box sx={{ height: 300 }}>
+                  {chartData.repsData && (
+                    <Line data={chartData.repsData} options={chartOptions} />
+                  )}
+                </Box>
+              </Paper>
+            </Box>
+
+            {/* Total Volume Chart */}
+            <Box sx={{ mb: 4 }}>
+              <Paper elevation={0} sx={{ p: 3, backgroundColor: 'rgba(255,255,255,0.03)', borderRadius: 3, border: '1px solid', borderColor: 'rgba(245,128,37,0.2)' }}>
+                <Typography variant="h5" sx={{ mb: 2 }}>
+                  Total Volume (weight x reps) per session
+                </Typography>
+                <Box sx={{ height: 300 }}>
+                  {chartData.volumeData && (
+                    <Line data={chartData.volumeData} options={chartOptions} />
+                  )}
+                </Box>
+              </Paper>
+            </Box>
+
+            {/* History Table */}
+            <Paper elevation={0} sx={{ p: 3, backgroundColor: 'rgba(255,255,255,0.03)', borderRadius: 3, border: '1px solid', borderColor: 'rgba(245,128,37,0.2)' }}>
+              <Typography variant="h5" sx={{ mb: 2 }}>
+                Exercise History (Daily Max)
+              </Typography>
+              <TableContainer>
+                <Table size="small">
+                  <TableHead>
+                    <TableRow>
+                      <TableCell>Date</TableCell>
+                      <TableCell>Name</TableCell>
+                      <TableCell align="right">Max Weight (lbs)</TableCell>
+                      <TableCell align="right">Max Reps</TableCell>
+                      <TableCell align="right">Total Volume (lbs)</TableCell>
+                    </TableRow>
+                  </TableHead>
+                  <TableBody>
+                    {exerciseHistoryAggregated.map((item, index) => (
+                      <TableRow key={`${item.exercise_date}-${index}`} hover>
+                        <TableCell>
+                          {format(new Date(item.exercise_date), 'MMM d, yyyy')}
+                        </TableCell>
+                        <TableCell sx={{ fontWeight: 500 }}>{item.name || '—'}</TableCell>
+                        <TableCell align="right">{item.top_weight ?? '—'}</TableCell>
+                        <TableCell align="right">{item.top_reps ?? '—'}</TableCell>
+                        <TableCell align="right">{item.total_volume ? Math.round(item.total_volume) : '—'}</TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </TableContainer>
+            </Paper>
+          </>
+        )}
+      </Box>
+    );
+  }
 
   if (loading) {
     return (
@@ -354,7 +603,23 @@ export const ChartsComponent: React.FC = () => {
               <TableBody>
                 {sortedProgressionData.map((item, index) => (
                   <TableRow key={`${item.name}-${index}`} hover>
-                    <TableCell sx={{ fontWeight: 500 }}>{item.name || '—'}</TableCell>
+                    <TableCell sx={{ fontWeight: 500 }}>
+                      <Link
+                        component="button"
+                        variant="body2"
+                        onClick={() => handleExerciseClick(item.name)}
+                        sx={{
+                          color: '#6f9c3d',
+                          textDecoration: 'none',
+                          cursor: 'pointer',
+                          '&:hover': {
+                            textDecoration: 'underline',
+                          },
+                        }}
+                      >
+                        {item.name || '—'}
+                      </Link>
+                    </TableCell>
                     <TableCell>
                       {item.category ? (
                         <Chip label={item.category} size="small" color="primary" variant="outlined" />
@@ -442,7 +707,23 @@ export const ChartsComponent: React.FC = () => {
               <TableBody>
                 {sortedUsageData.map((item, index) => (
                   <TableRow key={`${item.name}-${index}`} hover>
-                    <TableCell sx={{ fontWeight: 500 }}>{item.name || '—'}</TableCell>
+                    <TableCell sx={{ fontWeight: 500 }}>
+                      <Link
+                        component="button"
+                        variant="body2"
+                        onClick={() => handleExerciseClick(item.name)}
+                        sx={{
+                          color: '#6f9c3d',
+                          textDecoration: 'none',
+                          cursor: 'pointer',
+                          '&:hover': {
+                            textDecoration: 'underline',
+                          },
+                        }}
+                      >
+                        {item.name || '—'}
+                      </Link>
+                    </TableCell>
                     <TableCell>
                       {item.category ? (
                         <Chip label={item.category} size="small" color="secondary" variant="outlined" />
