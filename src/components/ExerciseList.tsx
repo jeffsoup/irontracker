@@ -39,6 +39,8 @@ import PhotoCameraIcon from '@mui/icons-material/PhotoCamera';
 import ImageIcon from '@mui/icons-material/Image';
 import CloseIcon from '@mui/icons-material/Close';
 import DeleteForeverIcon from '@mui/icons-material/DeleteForever';
+import VideoLibraryIcon from '@mui/icons-material/VideoLibrary';
+import VideoCallIcon from '@mui/icons-material/VideoCall';
 import { Exercise } from '../types/Exercise';
 import { exerciseService } from '../services/exerciseService';
 import { imageService } from '../services/imageService';
@@ -84,6 +86,14 @@ export const ExerciseList: React.FC<ExerciseListProps> = ({ onDelete, activeWork
   const [viewImageUrl, setViewImageUrl] = useState<string | null>(null);
   const [viewImageExerciseId, setViewImageExerciseId] = useState<string | null>(null);
   const [deletingImage, setDeletingImage] = useState(false);
+  const [selectedVideo, setSelectedVideo] = useState<File | null>(null);
+  const [videoPreview, setVideoPreview] = useState<string | null>(null);
+  const [videoDialogOpen, setVideoDialogOpen] = useState(false);
+  const [videoError, setVideoError] = useState<string | null>(null);
+  const [viewVideoDialogOpen, setViewVideoDialogOpen] = useState(false);
+  const [viewVideoUrl, setViewVideoUrl] = useState<string | null>(null);
+  const [viewVideoExerciseId, setViewVideoExerciseId] = useState<string | null>(null);
+  const [deletingVideo, setDeletingVideo] = useState(false);
 
   useEffect(() => {
     loadExercises();
@@ -136,11 +146,18 @@ export const ExerciseList: React.FC<ExerciseListProps> = ({ onDelete, activeWork
       rating: exercise.rating,
       notes: exercise.notes,
       image_path: exercise.image_path,
+      video_path: exercise.video_path,
     });
     // Reset image state
     setSelectedImage(null);
     setImagePreview(null);
     setImageError(null);
+    if (videoPreview) {
+      URL.revokeObjectURL(videoPreview);
+    }
+    setSelectedVideo(null);
+    setVideoPreview(null);
+    setVideoError(null);
   };
 
   const handleImageSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -175,6 +192,44 @@ export const ExerciseList: React.FC<ExerciseListProps> = ({ onDelete, activeWork
     // Also remove from edit form
     if (editForm) {
       setEditForm({ ...editForm, image_path: null });
+    }
+  };
+
+  const handleVideoSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    try {
+      imageService.validateVideoFile(file);
+      if (videoPreview) {
+        URL.revokeObjectURL(videoPreview);
+      }
+      setSelectedVideo(file);
+      setVideoError(null);
+
+      const previewUrl = URL.createObjectURL(file);
+      setVideoPreview(previewUrl);
+      setVideoDialogOpen(true);
+    } catch (error: any) {
+      setVideoError(error.message);
+      setSelectedVideo(null);
+      if (videoPreview) {
+        URL.revokeObjectURL(videoPreview);
+        setVideoPreview(null);
+      }
+    }
+  };
+
+  const handleRemoveVideo = () => {
+    if (videoPreview) {
+      URL.revokeObjectURL(videoPreview);
+    }
+    setSelectedVideo(null);
+    setVideoPreview(null);
+    setVideoDialogOpen(false);
+    setVideoError(null);
+    if (editForm) {
+      setEditForm({ ...editForm, video_path: null });
     }
   };
 
@@ -218,6 +273,51 @@ export const ExerciseList: React.FC<ExerciseListProps> = ({ onDelete, activeWork
     }
   };
 
+  const handleViewVideo = (exercise: Exercise) => {
+    if (!exercise.video_path) return;
+    const videoUrl = imageService.getVideoUrl(exercise.video_path);
+    setViewVideoUrl(videoUrl);
+    setViewVideoExerciseId(exercise.id);
+    setViewVideoDialogOpen(true);
+  };
+
+  const handleDeleteExerciseVideo = async (exerciseId: string, videoPath: string) => {
+    if (!videoPath) return;
+    const confirmDelete = window.confirm('Delete this exercise video? This action cannot be undone.');
+    if (!confirmDelete) return;
+
+    try {
+      setDeletingVideo(true);
+      await imageService.deleteVideo(videoPath);
+      const updatedExercise = await exerciseService.updateExercise(exerciseId, { video_path: null });
+      setExercises(prev => prev.map(ex => ex.id === exerciseId ? { ...ex, ...updatedExercise } : ex));
+
+      if (editingId === exerciseId) {
+        setEditForm(prev => prev ? { ...prev, video_path: null } : prev);
+      }
+
+      if (selectedVideo) {
+        setSelectedVideo(null);
+      }
+      if (videoPreview) {
+        URL.revokeObjectURL(videoPreview);
+        setVideoPreview(null);
+      }
+      setVideoError(null);
+
+      if (viewVideoExerciseId === exerciseId) {
+        setViewVideoDialogOpen(false);
+        setViewVideoUrl(null);
+        setViewVideoExerciseId(null);
+      }
+    } catch (err: any) {
+      console.error('Error deleting exercise video:', err);
+      setVideoError(err.message || 'Failed to delete exercise video');
+    } finally {
+      setDeletingVideo(false);
+    }
+  };
+
   const handleSave = async () => {
     if (!editingId || !editForm) return;
     try {
@@ -242,6 +342,22 @@ export const ExerciseList: React.FC<ExerciseListProps> = ({ onDelete, activeWork
         updatedForm.image_path = imagePath;
       }
 
+      if (selectedVideo) {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) throw new Error('User must be authenticated to upload videos');
+
+        if (editForm.video_path) {
+          try {
+            await imageService.deleteVideo(editForm.video_path);
+          } catch (err) {
+            console.error('Error deleting old video:', err);
+          }
+        }
+
+        const videoPath = await imageService.uploadVideo(selectedVideo, user.id);
+        updatedForm.video_path = videoPath;
+      }
+
       const updatedExercise = await exerciseService.updateExercise(editingId, updatedForm);
       setExercises(exercises.map(ex => 
         ex.id === editingId ? { ...ex, ...updatedExercise } : ex
@@ -251,9 +367,16 @@ export const ExerciseList: React.FC<ExerciseListProps> = ({ onDelete, activeWork
       setSelectedImage(null);
       setImagePreview(null);
       setImageError(null);
+      if (videoPreview) {
+        URL.revokeObjectURL(videoPreview);
+      }
+      setSelectedVideo(null);
+      setVideoPreview(null);
+      setVideoError(null);
     } catch (err: any) {
       console.error('Error updating exercise:', err);
       setImageError(err.message || 'Failed to update exercise');
+      setVideoError(err.message || 'Failed to update exercise');
     } finally {
       setUploading(false);
     }
@@ -265,6 +388,12 @@ export const ExerciseList: React.FC<ExerciseListProps> = ({ onDelete, activeWork
     setSelectedImage(null);
     setImagePreview(null);
     setImageError(null);
+    if (videoPreview) {
+      URL.revokeObjectURL(videoPreview);
+    }
+    setSelectedVideo(null);
+    setVideoPreview(null);
+    setVideoError(null);
   };
 
   const handleEditFormChange = (field: keyof Exercise, value: any) => {
@@ -369,6 +498,7 @@ export const ExerciseList: React.FC<ExerciseListProps> = ({ onDelete, activeWork
   }
 
   const viewedExercise = viewImageExerciseId ? exercises.find(ex => ex.id === viewImageExerciseId) || null : null;
+  const viewedVideoExercise = viewVideoExerciseId ? exercises.find(ex => ex.id === viewVideoExerciseId) || null : null;
 
   return (
     <Box sx={{ width: '100%', p: 4 }}>
@@ -440,7 +570,7 @@ export const ExerciseList: React.FC<ExerciseListProps> = ({ onDelete, activeWork
               <TableCell>Weight (lbs)</TableCell>
               <TableCell>Rating</TableCell>
               <TableCell>Notes</TableCell>
-              <TableCell>Image</TableCell>
+              <TableCell>Media</TableCell>
               <TableCell>Workout</TableCell>
               <TableCell>Actions</TableCell>
             </TableRow>
@@ -576,43 +706,34 @@ export const ExerciseList: React.FC<ExerciseListProps> = ({ onDelete, activeWork
                       </TableCell>
                       <TableCell>
                         {editingId === exercise.id ? (
-                          <Box>
-                            <input
-                              accept="image/*"
-                              style={{ display: 'none' }}
-                              id={`image-upload-edit-${exercise.id}`}
-                              type="file"
-                              onChange={handleImageSelect}
-                            />
-                            <label htmlFor={`image-upload-edit-${exercise.id}`}>
-                              <Button
-                                variant="outlined"
-                                component="span"
-                                size="small"
-                                startIcon={<PhotoCameraIcon />}
-                              >
-                                {editForm?.image_path || selectedImage ? 'Change' : 'Add'}
-                              </Button>
-                            </label>
-                            {(editForm?.image_path || imagePreview) && (
-                              <Box sx={{ mt: 1 }}>
-                                {imagePreview ? (
+                          <Stack spacing={1}>
+                            <Box>
+                              <input
+                                accept="image/*"
+                                style={{ display: 'none' }}
+                                id={`image-upload-edit-${exercise.id}`}
+                                type="file"
+                                onChange={handleImageSelect}
+                              />
+                              <label htmlFor={`image-upload-edit-${exercise.id}`}>
+                                <Button
+                                  variant="outlined"
+                                  component="span"
+                                  size="small"
+                                  startIcon={<PhotoCameraIcon />}
+                                >
+                                  {editForm?.image_path || selectedImage ? 'Change Image' : 'Add Image'}
+                                </Button>
+                              </label>
+                              {(editForm?.image_path || imagePreview) && (
+                                <Box sx={{ mt: 1, position: 'relative', width: 60, height: 60 }}>
                                   <img
-                                    src={imagePreview}
-                                    alt="Preview"
-                                    style={{
-                                      width: '60px',
-                                      height: '60px',
-                                      objectFit: 'cover',
-                                      borderRadius: '4px'
-                                    }}
-                                  />
-                                ) : editForm?.image_path ? (
-                                  <img
-                                    src={imageService.getImageUrl(editForm.image_path)}
+                                    src={imagePreview || imageService.getImageUrl(editForm?.image_path!)}
                                     alt="Exercise"
                                     onError={() => {
-                                      console.error('Error loading image:', editForm.image_path);
+                                      if (editForm?.image_path) {
+                                        console.error('Error loading image:', editForm.image_path);
+                                      }
                                     }}
                                     style={{
                                       width: '60px',
@@ -621,36 +742,125 @@ export const ExerciseList: React.FC<ExerciseListProps> = ({ onDelete, activeWork
                                       borderRadius: '4px'
                                     }}
                                   />
-                                ) : null}
-                              </Box>
-                            )}
-                          </Box>
-                        ) : (
-                          exercise.image_path ? (
-                            <Box sx={{ display: 'flex', gap: 0.5 }}>
-                              <Tooltip title="View Image">
-                                <IconButton
-                                  size="small"
-                                  onClick={() => handleViewImage(exercise)}
-                                  color="primary"
-                                >
-                                  <ImageIcon />
-                                </IconButton>
-                              </Tooltip>
-                              <Tooltip title={deletingImage ? 'Deleting...' : 'Delete Image'}>
-                                <span>
                                   <IconButton
                                     size="small"
-                                    color="error"
-                                    disabled={deletingImage}
-                                    onClick={() => handleDeleteExerciseImage(exercise.id, exercise.image_path!)}
+                                    onClick={handleRemoveImage}
+                                    sx={{
+                                      position: 'absolute',
+                                      top: -8,
+                                      right: -8,
+                                      bgcolor: 'background.paper'
+                                    }}
                                   >
-                                    <DeleteForeverIcon />
+                                    <CloseIcon fontSize="small" />
                                   </IconButton>
-                                </span>
-                              </Tooltip>
+                                </Box>
+                              )}
                             </Box>
-                          ) : null
+                            <Box>
+                              <input
+                                accept="video/*"
+                                style={{ display: 'none' }}
+                                id={`video-upload-edit-${exercise.id}`}
+                                type="file"
+                                onChange={handleVideoSelect}
+                              />
+                              <label htmlFor={`video-upload-edit-${exercise.id}`}>
+                                <Button
+                                  variant="outlined"
+                                  component="span"
+                                  size="small"
+                                  startIcon={<VideoCallIcon />}
+                                >
+                                  {editForm?.video_path || selectedVideo ? 'Change Video' : 'Add Video'}
+                                </Button>
+                              </label>
+                              {(editForm?.video_path || videoPreview) && (
+                                <Box sx={{ mt: 1, position: 'relative', width: 120 }}>
+                                  <video
+                                    src={videoPreview || imageService.getVideoUrl(editForm?.video_path!)}
+                                    style={{
+                                      width: '120px',
+                                      maxHeight: '80px',
+                                      borderRadius: '4px',
+                                      backgroundColor: 'black',
+                                    }}
+                                    controls
+                                  />
+                                  <IconButton
+                                    size="small"
+                                    onClick={handleRemoveVideo}
+                                    sx={{
+                                      position: 'absolute',
+                                      top: -8,
+                                      right: -8,
+                                      bgcolor: 'background.paper'
+                                    }}
+                                  >
+                                    <CloseIcon fontSize="small" />
+                                  </IconButton>
+                                </Box>
+                              )}
+                            </Box>
+                          </Stack>
+                        ) : (
+                          <Stack spacing={0.5}>
+                            {exercise.image_path && (
+                              <Box sx={{ display: 'flex', gap: 0.5 }}>
+                                <Tooltip title="View Image">
+                                  <IconButton
+                                    size="small"
+                                    onClick={() => handleViewImage(exercise)}
+                                    color="primary"
+                                  >
+                                    <ImageIcon />
+                                  </IconButton>
+                                </Tooltip>
+                                <Tooltip title={deletingImage ? 'Deleting...' : 'Delete Image'}>
+                                  <span>
+                                    <IconButton
+                                      size="small"
+                                      color="error"
+                                      disabled={deletingImage}
+                                      onClick={() => handleDeleteExerciseImage(exercise.id, exercise.image_path!)}
+                                    >
+                                      <DeleteForeverIcon />
+                                    </IconButton>
+                                  </span>
+                                </Tooltip>
+                              </Box>
+                            )}
+                            {exercise.video_path && (
+                              <Box sx={{ display: 'flex', gap: 0.5 }}>
+                                <Tooltip title="View Video">
+                                  <IconButton
+                                    size="small"
+                                    onClick={() => handleViewVideo(exercise)}
+                                    color="primary"
+                                  >
+                                    <VideoLibraryIcon />
+                                  </IconButton>
+                                </Tooltip>
+                                <Tooltip title={deletingVideo ? 'Deleting...' : 'Delete Video'}>
+                                  <span>
+                                    <IconButton
+                                      size="small"
+                                      color="error"
+                                      disabled={deletingVideo}
+                                      onClick={() => handleDeleteExerciseVideo(exercise.id, exercise.video_path!)}
+                                    >
+                                      <DeleteForeverIcon />
+                                    </IconButton>
+                                  </span>
+                                </Tooltip>
+                              </Box>
+                            )}
+                            {!exercise.image_path && !exercise.video_path && (
+                              <Typography variant="caption" color="text.secondary">
+                                No media
+                              </Typography>
+                            )}
+                          </Stack>
                         )}
                       </TableCell>
                       <TableCell>
@@ -720,6 +930,11 @@ export const ExerciseList: React.FC<ExerciseListProps> = ({ onDelete, activeWork
       {imageError && (
         <Alert severity="error" sx={{ mt: 2 }}>
           {imageError}
+        </Alert>
+      )}
+      {videoError && (
+        <Alert severity="error" sx={{ mt: 2 }}>
+          {videoError}
         </Alert>
       )}
 
@@ -820,6 +1035,111 @@ export const ExerciseList: React.FC<ExerciseListProps> = ({ onDelete, activeWork
             </Button>
           )}
           <Button onClick={() => setViewImageDialogOpen(false)} variant="contained" disabled={deletingImage}>
+            Close
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Video Preview Dialog */}
+      <Dialog
+        open={videoDialogOpen}
+        onClose={() => setVideoDialogOpen(false)}
+        maxWidth="md"
+        fullWidth
+      >
+        <DialogTitle>
+          Video Preview
+          <IconButton
+            onClick={() => setVideoDialogOpen(false)}
+            sx={{
+              position: 'absolute',
+              right: 8,
+              top: 8,
+            }}
+          >
+            <CloseIcon />
+          </IconButton>
+        </DialogTitle>
+        <DialogContent>
+          {videoPreview && (
+            <Box sx={{ display: 'flex', justifyContent: 'center', p: 2 }}>
+              <video
+                src={videoPreview}
+                style={{
+                  maxWidth: '100%',
+                  width: '100%',
+                  maxHeight: '500px',
+                  borderRadius: '8px',
+                  backgroundColor: 'black',
+                }}
+                controls
+              />
+            </Box>
+          )}
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleRemoveVideo} color="error">
+            Remove Video
+          </Button>
+          <Button onClick={() => setVideoDialogOpen(false)} variant="contained">
+            Looks Good
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* View Video Dialog */}
+      <Dialog
+        open={viewVideoDialogOpen}
+        onClose={() => setViewVideoDialogOpen(false)}
+        maxWidth="lg"
+        fullWidth
+      >
+        <DialogTitle>
+          Exercise Video
+          <IconButton
+            onClick={() => setViewVideoDialogOpen(false)}
+            sx={{
+              position: 'absolute',
+              right: 8,
+              top: 8,
+            }}
+          >
+            <CloseIcon />
+          </IconButton>
+        </DialogTitle>
+        <DialogContent>
+          {viewVideoUrl && (
+            <Box sx={{ display: 'flex', justifyContent: 'center', p: 2 }}>
+              <video
+                src={viewVideoUrl}
+                style={{
+                  width: '100%',
+                  maxHeight: '80vh',
+                  borderRadius: '8px',
+                  backgroundColor: 'black',
+                }}
+                controls
+                onError={() => {
+                  console.error('Error loading video:', viewVideoUrl);
+                  setVideoError('Failed to load video. Please ensure the storage bucket is set to public in Supabase.');
+                }}
+              />
+            </Box>
+          )}
+        </DialogContent>
+        <DialogActions>
+          {viewedVideoExercise?.video_path && (
+            <Button
+              onClick={() => handleDeleteExerciseVideo(viewedVideoExercise.id, viewedVideoExercise.video_path!)}
+              color="error"
+              variant="outlined"
+              startIcon={<DeleteForeverIcon />}
+              disabled={deletingVideo}
+            >
+              Delete Video
+            </Button>
+          )}
+          <Button onClick={() => setViewVideoDialogOpen(false)} variant="contained" disabled={deletingVideo}>
             Close
           </Button>
         </DialogActions>

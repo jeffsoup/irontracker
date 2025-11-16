@@ -21,6 +21,7 @@ import {
   Alert,
 } from '@mui/material';
 import PhotoCameraIcon from '@mui/icons-material/PhotoCamera';
+import VideocamIcon from '@mui/icons-material/Videocam';
 import CloseIcon from '@mui/icons-material/Close';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
@@ -52,6 +53,9 @@ export const ExerciseForm: React.FC<ExerciseFormProps> = ({ onSubmit, activeWork
     notes: '',
     workout: null,
     image_path: null,
+    myorep: false,
+    dropset: false,
+    video_path: null,
   });
 
   const [exerciseNames, setExerciseNames] = useState<string[]>([]);
@@ -61,6 +65,10 @@ export const ExerciseForm: React.FC<ExerciseFormProps> = ({ onSubmit, activeWork
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [imageDialogOpen, setImageDialogOpen] = useState(false);
   const [imageError, setImageError] = useState<string | null>(null);
+  const [selectedVideo, setSelectedVideo] = useState<File | null>(null);
+  const [videoPreview, setVideoPreview] = useState<string | null>(null);
+  const [videoDialogOpen, setVideoDialogOpen] = useState(false);
+  const [videoError, setVideoError] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
 
   useEffect(() => {
@@ -77,6 +85,9 @@ export const ExerciseForm: React.FC<ExerciseFormProps> = ({ onSubmit, activeWork
               name: exercise.name || '',
               reps: exercise.reps || 0,
               weight: exercise.weight || 0,
+              myorep: !!exercise.myorep,
+              dropset: !!exercise.dropset,
+              video_path: null,
             }));
           } else {
             setFormData((prev) => ({
@@ -85,6 +96,9 @@ export const ExerciseForm: React.FC<ExerciseFormProps> = ({ onSubmit, activeWork
               name: '',
               reps: 0,
               weight: 0,
+              myorep: false,
+              dropset: false,
+              video_path: null,
             }));
           }
         })
@@ -95,6 +109,9 @@ export const ExerciseForm: React.FC<ExerciseFormProps> = ({ onSubmit, activeWork
             name: '',
             reps: 0,
             weight: 0,
+            myorep: false,
+            dropset: false,
+            video_path: null,
           }));
         });
     } else {
@@ -105,6 +122,9 @@ export const ExerciseForm: React.FC<ExerciseFormProps> = ({ onSubmit, activeWork
         name: '',
         reps: 0,
         weight: 0,
+        myorep: false,
+        dropset: false,
+        video_path: null,
       }));
     }
   }, [activeWorkout]);
@@ -125,6 +145,8 @@ export const ExerciseForm: React.FC<ExerciseFormProps> = ({ onSubmit, activeWork
               reps: match.reps || 0,
               weight: match.weight || 0,
               notes: match.notes || '',
+              myorep: !!match.myorep,
+              dropset: !!match.dropset,
             }));
           } else {
             setFormData(prev => ({
@@ -133,6 +155,8 @@ export const ExerciseForm: React.FC<ExerciseFormProps> = ({ onSubmit, activeWork
               reps: 0,
               weight: 0,
               notes: '',
+              myorep: false,
+              dropset: false,
             }));
           }
         })
@@ -143,6 +167,8 @@ export const ExerciseForm: React.FC<ExerciseFormProps> = ({ onSubmit, activeWork
             reps: 0,
             weight: 0,
             notes: '',
+            myorep: false,
+            dropset: false,
           }));
         });
     }
@@ -172,6 +198,14 @@ export const ExerciseForm: React.FC<ExerciseFormProps> = ({ onSubmit, activeWork
       setRecommendedExercises([]);
     }
   }, [formData.category]);
+
+  useEffect(() => {
+    return () => {
+      if (videoPreview) {
+        URL.revokeObjectURL(videoPreview);
+      }
+    };
+  }, [videoPreview]);
 
   const handleImageSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -204,6 +238,41 @@ export const ExerciseForm: React.FC<ExerciseFormProps> = ({ onSubmit, activeWork
     setImageError(null);
   };
 
+  const handleVideoSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    try {
+      imageService.validateVideoFile(file);
+      if (videoPreview) {
+        URL.revokeObjectURL(videoPreview);
+      }
+      setSelectedVideo(file);
+      setVideoError(null);
+
+      const previewUrl = URL.createObjectURL(file);
+      setVideoPreview(previewUrl);
+      setVideoDialogOpen(true);
+    } catch (error: any) {
+      setVideoError(error.message);
+      setSelectedVideo(null);
+      if (videoPreview) {
+        URL.revokeObjectURL(videoPreview);
+        setVideoPreview(null);
+      }
+    }
+  };
+
+  const handleRemoveVideo = () => {
+    if (videoPreview) {
+      URL.revokeObjectURL(videoPreview);
+    }
+    setSelectedVideo(null);
+    setVideoPreview(null);
+    setVideoDialogOpen(false);
+    setVideoError(null);
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!activeWorkout) return;
@@ -211,6 +280,7 @@ export const ExerciseForm: React.FC<ExerciseFormProps> = ({ onSubmit, activeWork
     try {
       setUploading(true);
       let imagePath: string | null = null;
+      let videoPath: string | null = null;
 
       // Upload image if one was selected
       if (selectedImage) {
@@ -219,12 +289,19 @@ export const ExerciseForm: React.FC<ExerciseFormProps> = ({ onSubmit, activeWork
         imagePath = await imageService.uploadImage(selectedImage, user.id);
       }
 
+      if (selectedVideo) {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) throw new Error('User must be authenticated to upload videos');
+        videoPath = await imageService.uploadVideo(selectedVideo, user.id);
+      }
+
       onSubmit({
         ...formData,
         name: formData.name ? formData.name.trim() : null,
         notes: formData.notes || null,
         workout: activeWorkout.id,
         image_path: imagePath,
+        video_path: videoPath,
       });
 
       // Reset form
@@ -238,14 +315,25 @@ export const ExerciseForm: React.FC<ExerciseFormProps> = ({ onSubmit, activeWork
         notes: '',
         workout: null,
         image_path: null,
+        myorep: false,
+        dropset: false,
+        video_path: null,
       });
       setExerciseNames([]);
       setRecommendedExercises([]);
       setSelectedImage(null);
       setImagePreview(null);
       setImageError(null);
+      if (videoPreview) {
+        URL.revokeObjectURL(videoPreview);
+      }
+      setSelectedVideo(null);
+      setVideoPreview(null);
+      setVideoError(null);
     } catch (error: any) {
-      setImageError(error.message || 'Failed to upload image');
+      const message = error.message || 'Failed to upload media';
+      setImageError(message);
+      setVideoError(message);
     } finally {
       setUploading(false);
     }
@@ -261,6 +349,17 @@ export const ExerciseForm: React.FC<ExerciseFormProps> = ({ onSubmit, activeWork
 
   const formatLastUsedDate = (date: Date) => {
     return format(date, 'MMM d');
+  };
+
+  const currentSetType: 'standard' | 'myorep' | 'dropset' =
+    formData.myorep ? 'myorep' : formData.dropset ? 'dropset' : 'standard';
+
+  const handleSetTypeChange = (value: 'standard' | 'myorep' | 'dropset') => {
+    setFormData(prev => ({
+      ...prev,
+      myorep: value === 'myorep',
+      dropset: value === 'dropset',
+    }));
   };
 
   if (!activeWorkout) {
@@ -396,6 +495,18 @@ export const ExerciseForm: React.FC<ExerciseFormProps> = ({ onSubmit, activeWork
             max={5}
           />
         </Box>
+        <FormControl fullWidth>
+          <InputLabel>Set Type</InputLabel>
+          <Select
+            value={currentSetType}
+            label="Set Type"
+            onChange={(e) => handleSetTypeChange(e.target.value as 'standard' | 'myorep' | 'dropset')}
+          >
+            <MenuItem value="standard">Standard</MenuItem>
+            <MenuItem value="myorep">Myorep</MenuItem>
+            <MenuItem value="dropset">Dropset</MenuItem>
+          </Select>
+        </FormControl>
         <TextField
           label="Notes"
           value={formData.notes}
@@ -458,6 +569,59 @@ export const ExerciseForm: React.FC<ExerciseFormProps> = ({ onSubmit, activeWork
           )}
         </Box>
 
+        {/* Video Upload Section */}
+        <Box>
+          <input
+            accept="video/*"
+            style={{ display: 'none' }}
+            id="video-upload-button"
+            type="file"
+            onChange={handleVideoSelect}
+          />
+          <label htmlFor="video-upload-button">
+            <Button
+              variant="outlined"
+              component="span"
+              startIcon={<VideocamIcon />}
+              fullWidth
+            >
+              {selectedVideo ? 'Change Video' : 'Add Video (Optional)'}
+            </Button>
+          </label>
+          {videoPreview && (
+            <Box sx={{ mt: 2, position: 'relative' }}>
+              <video
+                src={videoPreview}
+                style={{
+                  width: '100%',
+                  maxHeight: '250px',
+                  borderRadius: '8px',
+                  backgroundColor: 'black',
+                }}
+                controls
+              />
+              <IconButton
+                onClick={handleRemoveVideo}
+                sx={{
+                  position: 'absolute',
+                  top: 8,
+                  right: 8,
+                  bgcolor: 'background.paper',
+                  '&:hover': { bgcolor: 'background.paper' }
+                }}
+                size="small"
+              >
+                <CloseIcon />
+              </IconButton>
+            </Box>
+          )}
+          {videoError && (
+            <Alert severity="error" sx={{ mt: 2 }}>
+              {videoError}
+            </Alert>
+          )}
+        </Box>
+
         <Button 
           type="submit" 
           variant="contained" 
@@ -508,6 +672,52 @@ export const ExerciseForm: React.FC<ExerciseFormProps> = ({ onSubmit, activeWork
             Remove Image
           </Button>
           <Button onClick={() => setImageDialogOpen(false)} variant="contained">
+            Looks Good
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Video Preview Dialog */}
+      <Dialog
+        open={videoDialogOpen}
+        onClose={() => setVideoDialogOpen(false)}
+        maxWidth="md"
+        fullWidth
+      >
+        <DialogTitle>
+          Video Preview
+          <IconButton
+            onClick={() => setVideoDialogOpen(false)}
+            sx={{
+              position: 'absolute',
+              right: 8,
+              top: 8,
+            }}
+          >
+            <CloseIcon />
+          </IconButton>
+        </DialogTitle>
+        <DialogContent>
+          {videoPreview && (
+            <Box sx={{ display: 'flex', justifyContent: 'center', p: 2 }}>
+              <video
+                src={videoPreview}
+                style={{
+                  maxWidth: '100%',
+                  maxHeight: '500px',
+                  borderRadius: '8px',
+                  backgroundColor: 'black',
+                }}
+                controls
+              />
+            </Box>
+          )}
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleRemoveVideo} color="error">
+            Remove Video
+          </Button>
+          <Button onClick={() => setVideoDialogOpen(false)} variant="contained">
             Looks Good
           </Button>
         </DialogActions>

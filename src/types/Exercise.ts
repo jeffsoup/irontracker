@@ -11,6 +11,9 @@ export interface Exercise {
   created_at: Date;
   workoutCategories: string[] | null;  // Categories from the associated workout
   image_path: string | null;  // Path to uploaded image in Supabase Storage
+  myorep?: boolean;
+  dropset?: boolean;
+  video_path?: string | null;
 }
 
 export interface ExerciseFormData {
@@ -23,6 +26,9 @@ export interface ExerciseFormData {
   notes: string | null;
   workout: string | null;
   image_path?: string | null;
+  myorep?: boolean;
+  dropset?: boolean;
+  video_path?: string | null;
 }
 
 export interface Workout {
