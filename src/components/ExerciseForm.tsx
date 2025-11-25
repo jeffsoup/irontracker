@@ -55,6 +55,7 @@ export const ExerciseForm: React.FC<ExerciseFormProps> = ({ onSubmit, activeWork
     image_path: null,
     myorep: false,
     dropset: false,
+    restpause: false,
     video_path: null,
   });
 
@@ -87,6 +88,7 @@ export const ExerciseForm: React.FC<ExerciseFormProps> = ({ onSubmit, activeWork
               weight: exercise.weight || 0,
               myorep: !!exercise.myorep,
               dropset: !!exercise.dropset,
+              restpause: !!exercise.restpause,
               video_path: null,
             }));
           } else {
@@ -98,6 +100,7 @@ export const ExerciseForm: React.FC<ExerciseFormProps> = ({ onSubmit, activeWork
               weight: 0,
               myorep: false,
               dropset: false,
+              restpause: false,
               video_path: null,
             }));
           }
@@ -111,6 +114,7 @@ export const ExerciseForm: React.FC<ExerciseFormProps> = ({ onSubmit, activeWork
             weight: 0,
             myorep: false,
             dropset: false,
+            restpause: false,
             video_path: null,
           }));
         });
@@ -124,6 +128,7 @@ export const ExerciseForm: React.FC<ExerciseFormProps> = ({ onSubmit, activeWork
         weight: 0,
         myorep: false,
         dropset: false,
+        restpause: false,
         video_path: null,
       }));
     }
@@ -147,6 +152,7 @@ export const ExerciseForm: React.FC<ExerciseFormProps> = ({ onSubmit, activeWork
               notes: match.notes || '',
               myorep: !!match.myorep,
               dropset: !!match.dropset,
+              restpause: !!match.restpause
             }));
           } else {
             setFormData(prev => ({
@@ -157,6 +163,7 @@ export const ExerciseForm: React.FC<ExerciseFormProps> = ({ onSubmit, activeWork
               notes: '',
               myorep: false,
               dropset: false,
+              restpause: false
             }));
           }
         })
@@ -169,6 +176,7 @@ export const ExerciseForm: React.FC<ExerciseFormProps> = ({ onSubmit, activeWork
             notes: '',
             myorep: false,
             dropset: false,
+            restpause: false
           }));
         });
     }
@@ -317,6 +325,7 @@ export const ExerciseForm: React.FC<ExerciseFormProps> = ({ onSubmit, activeWork
         image_path: null,
         myorep: false,
         dropset: false,
+        restpause: false,
         video_path: null,
       });
       setExerciseNames([]);
@@ -503,8 +512,9 @@ export const ExerciseForm: React.FC<ExerciseFormProps> = ({ onSubmit, activeWork
             onChange={(e) => handleSetTypeChange(e.target.value as 'standard' | 'myorep' | 'dropset')}
           >
             <MenuItem value="standard">Standard</MenuItem>
-            <MenuItem value="myorep">Myorep</MenuItem>
+            <MenuItem value="myorep">MyoRep</MenuItem>
             <MenuItem value="dropset">Dropset</MenuItem>
+            <MenuItem value="restpause">RestPause</MenuItem>
           </Select>
         </FormControl>
         <TextField

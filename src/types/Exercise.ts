@@ -13,6 +13,7 @@ export interface Exercise {
   image_path: string | null;  // Path to uploaded image in Supabase Storage
   myorep?: boolean;
   dropset?: boolean;
+  restpause?: boolean;
   video_path?: string | null;
 }
 
@@ -28,6 +29,7 @@ export interface ExerciseFormData {
   image_path?: string | null;
   myorep?: boolean;
   dropset?: boolean;
+  restpause?: boolean;
   video_path?: string | null;
 }
 
