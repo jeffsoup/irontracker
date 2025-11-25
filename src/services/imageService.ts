@@ -92,6 +92,69 @@ export const imageService = {
     }
 
     return true;
+  },
+
+  /**
+   * Upload a video to Supabase Storage
+   */
+  async uploadVideo(file: File, userId: string): Promise<string> {
+    const fileExt = file.name.split('.').pop();
+    const fileName = `${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`;
+    const filePath = `${userId}/videos/${fileName}`;
+
+    const { error } = await supabase.storage
+      .from('workout-images')
+      .upload(filePath, file, {
+        cacheControl: '3600',
+        upsert: false
+      });
+
+    if (error) {
+      console.error('Error uploading video:', error);
+      throw error;
+    }
+
+    return filePath;
+  },
+
+  /**
+   * Get video public URL
+   */
+  getVideoUrl(path: string): string {
+    const { data } = supabase.storage
+      .from('workout-images')
+      .getPublicUrl(path);
+    
+    return data.publicUrl;
+  },
+
+  /**
+   * Delete video
+   */
+  async deleteVideo(path: string): Promise<void> {
+    const { error } = await supabase.storage
+      .from('workout-images')
+      .remove([path]);
+
+    if (error) {
+      console.error('Error deleting video:', error);
+      throw error;
+    }
+  },
+
+  validateVideoFile(file: File): boolean {
+    const maxSize = 50 * 1024 * 1024; // 50MB
+    const allowedTypes = ['video/mp4', 'video/webm', 'video/quicktime', 'video/ogg', 'video/x-matroska'];
+
+    if (!allowedTypes.includes(file.type)) {
+      throw new Error('Invalid file type. Please upload an MP4, WebM, MOV, OGG, or MKV video.');
+    }
+
+    if (file.size > maxSize) {
+      throw new Error('Video size too large. Maximum size is 50MB.');
+    }
+
+    return true;
   }
 };
 
