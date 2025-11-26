@@ -12,15 +12,16 @@ create table public.exercises (
   user_id uuid null,
   image_path text null,
   myorep boolean null default false,
-  dropseet boolean null default false,
+  dropset boolean null default false,
   constraint exercises_pk primary key (id),
-  constraint exercises_id_key unique (id)--,
-  --constraint exercises_workout_fkey foreign KEY (workout) references workouts (id) on delete set null
+  constraint exercises_workout_fkey foreign KEY (workout) references workouts (id) on delete set null
 ) TABLESPACE pg_default;
 
+alter table exercises 
+add column restpause boolean null default false;
 
 alter table exercises 
-add constraint exercises_workout_fkey foreign KEY (workout) references workouts (id) on delete set null;
+add column video_path text null;
 
 
 
@@ -80,3 +81,21 @@ create view progression_max as
             exercises
     ) AS subquery where rn = 1;
 GRANT SELECT ON TABLE progression_max TO PUBLIC;
+
+create table public.exercises_canonical (
+  id uuid not null default gen_random_uuid (),
+  name text not null,
+  category text null,
+  constraint exercises_canonical_pkey primary key (id)
+) TABLESPACE pg_default;
+
+
+CREATE or REPLACE VIEW exercise_options AS
+select distinct name, category
+from exercises
+UNION 
+(
+  select name, category from exercises_canonical
+)
+
+GRANT SELECT ON TABLE exercise_options TO PUBLIC;
