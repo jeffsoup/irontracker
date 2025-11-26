@@ -71,6 +71,7 @@ export const ExerciseForm: React.FC<ExerciseFormProps> = ({ onSubmit, activeWork
   const [videoDialogOpen, setVideoDialogOpen] = useState(false);
   const [videoError, setVideoError] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
+  const [showStarterDialog, setShowStarterDialog] = useState(false);
 
   useEffect(() => {
     // Only fetch categories from the active workout
@@ -206,6 +207,26 @@ export const ExerciseForm: React.FC<ExerciseFormProps> = ({ onSubmit, activeWork
       setRecommendedExercises([]);
     }
   }, [formData.category]);
+
+  useEffect(() => {
+    let isMounted = true;
+    const checkStarter = async () => {
+      try {
+        const hasExercises = await exerciseService.hasUserExercises();
+        if (!hasExercises && isMounted) {
+          setShowStarterDialog(true);
+        }
+      } catch (error) {
+        console.error('Error checking for starter exercises:', error);
+      }
+    };
+
+    checkStarter();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   useEffect(() => {
     return () => {
@@ -371,6 +392,29 @@ export const ExerciseForm: React.FC<ExerciseFormProps> = ({ onSubmit, activeWork
     }));
   };
 
+  const handleStarterYes = async () => {
+    try {
+      await exerciseService.populateStarterExercisesFromCanonical();
+      setShowStarterDialog(false);
+
+      // Refresh exercise names for the current category if selected
+      if (formData.category) {
+        try {
+          const names = await exerciseService.getExerciseNamesByCategory(formData.category);
+          setExerciseNames(names.filter((n): n is string => !!n));
+        } catch (error) {
+          console.error('Error refreshing exercise names after starter populate:', error);
+        }
+      }
+    } catch (error) {
+      console.error('Error populating starter exercises:', error);
+    }
+  };
+
+  const handleStarterNo = () => {
+    setShowStarterDialog(false);
+  };
+
   if (!activeWorkout) {
     return (
       <div className="fitness-empty-state">
@@ -416,7 +460,7 @@ export const ExerciseForm: React.FC<ExerciseFormProps> = ({ onSubmit, activeWork
             ))}
           </Select>
         </FormControl>
-        {formData.category && recommendedExercises.length > 0 && (
+        {formData.category && (
           <Paper 
             elevation={0} 
             sx={{ 
@@ -430,27 +474,33 @@ export const ExerciseForm: React.FC<ExerciseFormProps> = ({ onSubmit, activeWork
             <Typography variant="subtitle2" color="text.secondary" gutterBottom>
               Recommended Exercises (Least Recently Used):
             </Typography>
-            <Box 
-              sx={{ 
-                display: 'flex', 
-                gap: 1, 
-                flexWrap: 'wrap',
-                width: '100%',
-                boxSizing: 'border-box'
-              }}
-            >
-              {recommendedExercises.map((exercise) => (
-                <Chip
-                  key={exercise.name}
-                  label={`${exercise.name} (${formatLastUsedDate(exercise.lastUsed)})`}
-                  onClick={() => handleRecommendedExerciseClick(exercise.name)}
-                  color="primary"
-                  variant="outlined"
-                  clickable
-                  sx={{ maxWidth: '100%' }}
-                />
-              ))}
-            </Box>
+            {recommendedExercises.length > 0 ? (
+              <Box 
+                sx={{ 
+                  display: 'flex', 
+                  gap: 1, 
+                  flexWrap: 'wrap',
+                  width: '100%',
+                  boxSizing: 'border-box'
+                }}
+              >
+                {recommendedExercises.map((exercise) => (
+                  <Chip
+                    key={exercise.name}
+                    label={`${exercise.name} (${formatLastUsedDate(exercise.lastUsed)})`}
+                    onClick={() => handleRecommendedExerciseClick(exercise.name)}
+                    color="primary"
+                    variant="outlined"
+                    clickable
+                    sx={{ maxWidth: '100%' }}
+                  />
+                ))}
+              </Box>
+            ) : (
+              <Typography variant="body2" color="text.secondary" sx={{ fontStyle: 'italic' }}>
+                Not enough history to display exercise Recommendations
+              </Typography>
+            )}
           </Paper>
         )}
         <Autocomplete
@@ -643,6 +693,31 @@ export const ExerciseForm: React.FC<ExerciseFormProps> = ({ onSubmit, activeWork
       </Stack>
 
       {/* Image Preview Dialog */}
+      <Dialog
+        open={showStarterDialog}
+        onClose={handleStarterNo}
+        maxWidth="sm"
+        fullWidth
+      >
+        <DialogTitle>Welcome to IronTracker</DialogTitle>
+        <DialogContent>
+          <Typography sx={{ mb: 2 }}>
+            Hi there, it looks like this is your first time using the app. You can add any exercise you want by typing in the name of the exercise.
+          </Typography>
+          <Typography>
+            Also, if you would like we can populate your exercise choices with our starter set. Would you like us to add the starter set of exercises to these choices?
+          </Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleStarterNo}>
+            No
+          </Button>
+          <Button onClick={handleStarterYes} variant="contained" color="primary">
+            Yes
+          </Button>
+        </DialogActions>
+      </Dialog>
+
       <Dialog
         open={imageDialogOpen}
         onClose={() => setImageDialogOpen(false)}
