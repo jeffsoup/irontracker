@@ -55,6 +55,40 @@ export const workoutService = {
     if (error) throw error;
   },
 
+  async reactivateWorkout(id: string): Promise<Workout> {
+    const supabase = getSupabase();
+    
+    // First, deactivate any other active workouts to ensure only one is active at a time
+    await supabase
+      .from('workouts')
+      .update({ 
+        is_active: false,
+        ended_at: new Date().toISOString(),
+      })
+      .eq('is_active', true)
+      .is('ended_at', null)
+      .neq('id', id);
+
+    // Reactivate the selected workout
+    const { data, error } = await supabase
+      .from('workouts')
+      .update({ 
+        is_active: true,
+        ended_at: null,
+      })
+      .eq('id', id)
+      .select()
+      .single();
+
+    if (error) throw error;
+    
+    return {
+      ...data,
+      created_at: new Date(data.created_at),
+      ended_at: null,
+    };
+  },
+
   async getAllWorkouts(): Promise<Workout[]> {
     const supabase = getSupabase();
     const { data, error } = await supabase
@@ -90,8 +124,10 @@ export const workoutService = {
           reps,
           weight,
           workout,
+          notes,
           workouts!inner(
-            categories
+            categories,
+            is_active
           )
         `)
         .order('workout', { ascending: false })
@@ -106,6 +142,7 @@ export const workoutService = {
       // Get the most recent workout ID from the first result
       const mostRecentWorkoutId = data[0].workout;
       
+      
       // Filter to only exercises from that workout
       const lastWorkoutExercises = data.filter(exercise => exercise.workout === mostRecentWorkoutId);
       
@@ -114,7 +151,9 @@ export const workoutService = {
         category: item.category,
         reps: item.reps,
         weight: item.weight,
-        categories: (item.workouts as any)?.categories || []
+        notes: item.notes,
+        categories: (item.workouts as any)?.categories || [],
+        is_active: (item.workouts as any)?.is_active || false,
       }));
     } catch (error) {
       console.error('Error in getLastCompletedWorkout:', error);
