@@ -242,8 +242,8 @@ export const ChartsComponent: React.FC = () => {
   }, [usageData, usageSortField, usageSortOrder]);
 
   const renderEmptyState = (message: string) => (
-    <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', p: 6 }}>
-      <Typography variant="h6" color="text.secondary">{message}</Typography>
+    <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', p: 6}}>
+      <Typography variant="h6" sx={{ color: '#899499' }}>{message}</Typography>
     </Box>
   );
 

@@ -88,18 +88,34 @@ export const exerciseService = {
       .select('name, date')
       .eq('category', category)
       .eq('user_id', user.id)
+      .not('date', 'is', null)
       .order('date', { ascending: true });
 
     if (error) throw error;
 
+    // If no exercises with dates, return empty array
+    if (!data || data.length === 0) {
+      return [];
+    }
+
     // Get unique exercises with their most recent date
     const exerciseDates = new Map<string, Date>();
-    data?.forEach(exercise => {
+    data.forEach(exercise => {
+      // Double-check that date exists and is valid
+      if (!exercise.date) return;
       const currentDate = new Date(exercise.date);
+      // Check if date is valid
+      if (isNaN(currentDate.getTime())) return;
+      
       if (!exerciseDates.has(exercise.name) || currentDate > exerciseDates.get(exercise.name)!) {
         exerciseDates.set(exercise.name, currentDate);
       }
     });
+
+    // If no valid exercises with dates, return empty array
+    if (exerciseDates.size === 0) {
+      return [];
+    }
 
     // Sort by date (oldest first) and take top 3
     return Array.from(exerciseDates.entries())
@@ -113,6 +129,7 @@ export const exerciseService = {
     let query = supabase
       .from('progression_max')
       .select('category, name, weight, reps, date')
+      .not('date', 'is', null)
       .order('date', { ascending: true });
     
     if (category) {
@@ -134,6 +151,7 @@ export const exerciseService = {
     let query = supabase
       .from('exercise_usage')
       .select('name, total, category')
+      .gt('total', 0)
       .order('total', { ascending: false });
     
     if (category && category !== 'All') {
@@ -145,6 +163,55 @@ export const exerciseService = {
     if (error) throw error;
     
     return data || [];
+  },
+
+  async hasUserExercises(): Promise<boolean> {
+    const supabase = getSupabase();
+    const { data: { user }, error: userError } = await supabase.auth.getUser();
+    if (userError) throw userError;
+    if (!user) return false;
+
+    const { count, error } = await supabase
+      .from('exercises')
+      .select('id', { count: 'exact', head: true })
+      .eq('user_id', user.id);
+
+    if (error) throw error;
+
+    return (count ?? 0) > 0;
+  },
+
+  async populateStarterExercisesFromCanonical(): Promise<void> {
+    const supabase = getSupabase();
+    // Get the current user
+    const { data: { user }, error: userError } = await supabase.auth.getUser();
+    if (userError) throw userError;
+    if (!user) throw new Error('User must be authenticated to add starter exercises');
+
+    const { data, error } = await supabase
+      .from('exercises_canonical')
+      .select('name, category');
+
+    if (error) throw error;
+
+    const canonicalExercises = data || [];
+    if (canonicalExercises.length === 0) {
+      return;
+    }
+
+    const inserts = canonicalExercises.map((row: any) => ({
+      name: row.name,
+      category: row.category || 'Uncategorized',
+      reps: 0,
+      weight: 0,
+      user_id: user.id,
+    }));
+
+    const { error: insertError } = await supabase
+      .from('exercises')
+      .insert(inserts);
+
+    if (insertError) throw insertError;
   },
 
   async addExercise(exercise: ExerciseFormData): Promise<Exercise> {
