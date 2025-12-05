@@ -3,11 +3,12 @@ import { Box, Tab, Tabs } from '@mui/material';
 import { ExerciseForm } from './ExerciseForm';
 import { ExerciseList } from './ExerciseList';
 import { WorkoutsList } from './WorkoutsList';
-import { ChartsComponent } from './ChartsComponent';
+import { ChartsComponent } from './Progression';
 import { Home } from './Home';
 import { Profile } from './Profile';
 import { ExerciseFormData, Workout } from '../types/Exercise';
 import { exerciseService } from '../services/exerciseService';
+import { workoutService } from '../services/workoutService';
 import { getSupabase } from '../lib/supabase';
 
 interface ExerciseTabsProps {
@@ -81,10 +82,18 @@ export const ExerciseTabs: React.FC<ExerciseTabsProps> = ({
   };
 
   // Handler to resume a workout
-  const handleResumeWorkout = (workout: Workout) => {
-    if (setActiveWorkout) {
-      setActiveWorkout(workout);
+  const handleResumeWorkout = async (workout: Workout) => {
+    if (!setActiveWorkout) return;
+    
+    try {
+      // Reactivate the workout in the database
+      const reactivatedWorkout = await workoutService.reactivateWorkout(workout.id);
+      // Update local state with the reactivated workout
+      setActiveWorkout(reactivatedWorkout);
       onShowSnackbar('Workout resumed!');
+    } catch (error) {
+      console.error('Error resuming workout:', error);
+      onShowSnackbar('Failed to resume workout', 'error');
     }
   };
 

@@ -18,7 +18,10 @@ interface LastWorkoutExercise {
   category: string;
   reps: number;
   weight: number;
-  categories: string[];
+  categories: string[],
+  workout: number,
+  notes: string,
+  is_active: boolean;
 }
 
 export const Home: React.FC = () => {
@@ -186,30 +189,28 @@ export const Home: React.FC = () => {
           <Card elevation={2}>
             <CardContent>
               <Typography variant="h5" component="h2" sx={{ mb: 2, fontWeight: 'bold', color: 'primary.main' }}>
-                Last Workout Completed
+                {lastWorkout[0]?.is_active ? 'Current Workout' : 'Last Workout Completed'}
               </Typography>
               
               {lastWorkout.length > 0 ? (
                 <Box>
-                  <Box sx={{ mb: 2 }}>
-                    <Typography variant="subtitle2" color="text.secondary" sx={{ mb: 1 }}>
-                      Workout Categories:
+                  <Box sx={{ mb: 2, display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: 1 }}>
+                    <Typography variant="subtitle2" color="text.secondary" sx={{ color: '#899499', fontWeight: 'bold' }}>
+                      Split:
                     </Typography>
-                    <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
-                      {lastWorkout[0]?.categories?.map((cat: string, index: number) => (
-                        <Chip
-                          key={index}
-                          label={cat}
-                          size="small"
-                          variant="outlined"
-                          color="primary"
-                        />
-                      ))}
-                    </Box>
+                    {lastWorkout[0]?.categories?.map((cat: string, index: number) => (
+                      <Chip
+                        key={index}
+                        label={cat}
+                        size="small"
+                        variant="outlined"
+                        color="primary"
+                      />
+                    ))}
                   </Box>
                   
-                  <Typography variant="subtitle2" color="text.secondary" sx={{ mb: 1 }}>
-                    Exercises Performed:
+                  <Typography variant="subtitle2" sx={{ mb: 1, color: '#899499', fontWeight: 'bold' }}>
+                    Sets Completed:
                   </Typography>
                   {lastWorkout.map((exercise, index) => (
                     <Paper key={index} sx={{ p: 2, mb: 1, bgcolor: 'grey.50' }}>
@@ -220,6 +221,9 @@ export const Home: React.FC = () => {
                           </Typography>
                           <Typography variant="body2" sx={{ color: '#e0e0e0' }}>
                             {exercise.category}
+                          </Typography>
+                          <Typography variant="body2" color="text.secondary">
+                           Notes: {exercise.notes} 
                           </Typography>
                         </Box>
                         <Box sx={{ textAlign: 'right' }}>
@@ -243,118 +247,112 @@ export const Home: React.FC = () => {
           </Card>
         </Grid>
 
-        {/* Suggested Next Workout Section */}
+        {/* Right Column: Quick Stats and Suggested Next Workout */}
         <Grid item xs={12} md={6}>
-          <Card elevation={2}>
-            <CardContent>
-              <Typography variant="h5" component="h2" sx={{ mb: 2, fontWeight: 'bold', color: 'secondary.main' }}>
-                💡 Suggested Next Workout
-              </Typography>
-              
-              {suggestedCategories.length > 0 ? (
-                <Box>
-                  <Typography variant="body1" sx={{ mb: 2, color: '#ffffff' }}>
-                    Based on your last workout, here's what to focus on next:
-                  </Typography>
-                  {suggestedCategories.map((category, index) => (
-                    <Paper key={index} sx={{ p: 2, mb: 2, bgcolor: 'secondary.50' }}>
-                      <Typography variant="subtitle1" fontWeight="bold" color="secondary.main">
-                        🎯 {category}
-                      </Typography>
-                      <Typography variant="body2" sx={{ mt: 1, mb: 2, color: '#e0e0e0' }}>
-                        {getCategoryDescription(category)}
-                      </Typography>
-                      
-                      {/* Exercise Recommendations */}
-                      {exerciseRecommendations[category] && exerciseRecommendations[category].length > 0 ? (
-                        <Box>
-                          <Typography variant="subtitle2" color="text.secondary" sx={{ mb: 1 }}>
-                            💪{' '}
-                            <span style={{ color: 'rgb(245, 166, 35)' }}>
-                              <span>Some options (you haven't done these in awhile):</span>
-                            </span>
-                          </Typography>
-                          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
-                            {exerciseRecommendations[category].map((exercise, exIndex) => (
-                              <Chip
-                                key={exIndex}
-                                label={exercise}
-                                size="small"
-                                variant="outlined"
-                                color="secondary"
-                                sx={{ fontSize: '0.75rem' }}
-                              />
-                            ))}
-                          </Box>
-                        </Box>
-                      ) : (
-                        <Box>
-                          <Typography variant="subtitle2" color="text.secondary" sx={{ mb: 1 }}>
-                            💪{' '}
-                            <span style={{ color: 'rgb(245, 166, 35)' }}>
-                            Some options (you haven't done these in awhile):
-                            </span>
-                          </Typography>
-                          <Typography variant="body2" sx={{ fontStyle: 'italic', color: '#e0e0e0' }}>
-                            No specific exercises found for this category yet. Start working out to build recommendations!
-                          </Typography>
-                        </Box>
-                      )}
-                    </Paper>
-                  ))}
-                </Box>
-              ) : (
-                <Typography variant="body1" sx={{ color: '#e0e0e0' }}>
-                  Complete a workout to get personalized category suggestions!
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+            {/* Quick Stats Section */}
+            <Card elevation={2}>
+              <CardContent>
+                <Typography variant="h5" component="h2" sx={{ mb: 2, fontWeight: 'bold', color: 'success.main' }}>
+                  📊 Quick Stats
                 </Typography>
-              )}
-            </CardContent>
-          </Card>
+                <Grid container spacing={2}>
+                  <Grid item xs={12} sm={4}>
+                    <Box sx={{ textAlign: 'center', p: 2 }}>
+                      <Typography variant="h4" color="primary.main" fontWeight="bold">
+                        {lastWorkout.length}
+                      </Typography>
+                      <Typography variant="body2" color="text.secondary">
+                       
+                        {lastWorkout[0]?.is_active ? ' Total Sets in Current Workout' : ' Total Sets in Last Workout'}
+                      </Typography>
+                    </Box>
+                  </Grid>
+                  <Grid item xs={12} sm={4}>
+                    <Box sx={{ textAlign: 'center', p: 2 }}>
+                      <Typography variant="h4" color="secondary.main" fontWeight="bold">
+                        {lastWorkout.length > 0 ? lastWorkout[0]?.categories?.length || 0 : 0}
+                      </Typography>
+                      <Typography variant="body2" color="text.secondary">
+                       Muscle Groups
+                      </Typography>
+                    </Box>
+                  </Grid>
+                  <Grid item xs={12} sm={4}>
+                  </Grid>
+                </Grid>
+              </CardContent>
+            </Card>
+
+            {/* Suggested Next Workout Section */}
+            <Card elevation={2}>
+              <CardContent>
+                <Typography variant="h5" component="h2" sx={{ mb: 2, fontWeight: 'bold', color: 'secondary.main' }}>
+                  💡 Suggested Next Workout
+                </Typography>
+                
+                {suggestedCategories.length > 0 ? (
+                  <Box>
+                    <Typography variant="body1" sx={{ mb: 2, color: '#ffffff' }}>
+                      Based on your last workout, here's what to focus on next:
+                    </Typography>
+                    {suggestedCategories.map((category, index) => (
+                      <Paper key={index} sx={{ p: 2, mb: 2, bgcolor: 'secondary.50' }}>
+                        <Typography variant="subtitle1" fontWeight="bold" color="secondary.main">
+                          🎯 {category}
+                        </Typography>
+                        <Typography variant="body2" sx={{ mt: 1, mb: 2, color: '#e0e0e0' }}>
+                          {getCategoryDescription(category)}
+                        </Typography>
+                        
+                        {/* Exercise Recommendations */}
+                        {exerciseRecommendations[category] && exerciseRecommendations[category].length > 0 ? (
+                          <Box>
+                            <Typography variant="subtitle2" color="text.secondary" sx={{ mb: 1 }}>
+                              💪{' '}
+                              <span style={{ color: 'rgb(245, 166, 35)' }}>
+                                <span>Some options (you haven't done these in awhile):</span>
+                              </span>
+                            </Typography>
+                            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+                              {exerciseRecommendations[category].map((exercise, exIndex) => (
+                                <Chip
+                                  key={exIndex}
+                                  label={exercise}
+                                  size="small"
+                                  variant="outlined"
+                                  color="secondary"
+                                  sx={{ fontSize: '0.75rem' }}
+                                />
+                              ))}
+                            </Box>
+                          </Box>
+                        ) : (
+                          <Box>
+                            <Typography variant="subtitle2" color="text.secondary" sx={{ mb: 1 }}>
+                              💪{' '}
+                              <span style={{ color: 'rgb(245, 166, 35)' }}>
+                              Some options (you haven't done these in awhile):
+                              </span>
+                            </Typography>
+                            <Typography variant="body2" sx={{ fontStyle: 'italic', color: '#e0e0e0' }}>
+                              No specific exercises found for this category yet. Start working out to build recommendations!
+                            </Typography>
+                          </Box>
+                        )}
+                      </Paper>
+                    ))}
+                  </Box>
+                ) : (
+                  <Typography variant="body1" sx={{ color: '#e0e0e0' }}>
+                    Complete a workout to get personalized category suggestions!
+                  </Typography>
+                )}
+              </CardContent>
+            </Card>
+          </Box>
         </Grid>
       </Grid>
-
-      {/* Quick Stats Section */}
-      <Box sx={{ mt: 4 }}>
-        <Card elevation={2}>
-          <CardContent>
-            <Typography variant="h5" component="h2" sx={{ mb: 2, fontWeight: 'bold', color: 'success.main' }}>
-              📊 Quick Stats
-            </Typography>
-            <Grid container spacing={2}>
-              <Grid item xs={12} sm={4}>
-                <Box sx={{ textAlign: 'center', p: 2 }}>
-                  <Typography variant="h4" color="primary.main" fontWeight="bold">
-                    {lastWorkout.length}
-                  </Typography>
-                  <Typography variant="body2" color="text.secondary">
-                    Exercises in Last Workout
-                  </Typography>
-                </Box>
-              </Grid>
-              <Grid item xs={12} sm={4}>
-                <Box sx={{ textAlign: 'center', p: 2 }}>
-                  <Typography variant="h4" color="secondary.main" fontWeight="bold">
-                    {lastWorkout.length > 0 ? lastWorkout[0]?.categories?.length || 0 : 0}
-                  </Typography>
-                  <Typography variant="body2" color="text.secondary">
-                    Workout Categories
-                  </Typography>
-                </Box>
-              </Grid>
-              <Grid item xs={12} sm={4}>
-                <Box sx={{ textAlign: 'center', p: 2 }}>
-                  <Typography variant="h4" color="success.main" fontWeight="bold">
-                    {suggestedCategories.length}
-                  </Typography>
-                  <Typography variant="body2" color="text.secondary">
-                    Suggested Categories
-                  </Typography>
-                </Box>
-              </Grid>
-            </Grid>
-          </CardContent>
-        </Card>
-      </Box>
     </Box>
   );
 };

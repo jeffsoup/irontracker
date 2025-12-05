@@ -129,6 +129,7 @@ export const exerciseService = {
     let query = supabase
       .from('progression_max')
       .select('category, name, weight, reps, date')
+      .not('date', 'is', null)
       .order('date', { ascending: true });
     
     if (category) {
@@ -150,6 +151,7 @@ export const exerciseService = {
     let query = supabase
       .from('exercise_usage')
       .select('name, total, category')
+      .gt('total', 0)
       .order('total', { ascending: false });
     
     if (category && category !== 'All') {

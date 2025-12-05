@@ -99,3 +99,15 @@ UNION
 )
 
 GRANT SELECT ON TABLE exercise_options TO PUBLIC;
+
+
+CREATE OR REPLACE view exercise_usage as
+  SELECT
+   COUNT(DISTINCT workout) AS total, name, category
+  FROM
+    exercises
+  GROUP BY
+  name, category
+  ORDER BY
+    total desc, name DESC
+GRANT SELECT ON TABLE exercise_usage TO PUBLIC;      
