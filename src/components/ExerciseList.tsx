@@ -32,7 +32,6 @@ import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import DeleteIcon from '@mui/icons-material/Delete';
 import EditIcon from '@mui/icons-material/Edit';
 import SaveIcon from '@mui/icons-material/Save';
-import CancelIcon from '@mui/icons-material/Cancel';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ExpandLessIcon from '@mui/icons-material/ExpandLess';
 import PhotoCameraIcon from '@mui/icons-material/PhotoCamera';
@@ -70,6 +69,7 @@ export const ExerciseList: React.FC<ExerciseListProps> = ({ onDelete, activeWork
   const [error, setError] = useState<string | null>(null);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editForm, setEditForm] = useState<Partial<Exercise> | null>(null);
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [filters, setFilters] = useState<Filters>({
     date: null,
     category: '',
@@ -158,6 +158,7 @@ export const ExerciseList: React.FC<ExerciseListProps> = ({ onDelete, activeWork
     setSelectedVideo(null);
     setVideoPreview(null);
     setVideoError(null);
+    setEditDialogOpen(true);
   };
 
   const handleImageSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -373,6 +374,7 @@ export const ExerciseList: React.FC<ExerciseListProps> = ({ onDelete, activeWork
       setSelectedVideo(null);
       setVideoPreview(null);
       setVideoError(null);
+      setEditDialogOpen(false);
     } catch (err: any) {
       console.error('Error updating exercise:', err);
       setImageError(err.message || 'Failed to update exercise');
@@ -394,6 +396,7 @@ export const ExerciseList: React.FC<ExerciseListProps> = ({ onDelete, activeWork
     setSelectedVideo(null);
     setVideoPreview(null);
     setVideoError(null);
+    setEditDialogOpen(false);
   };
 
   const handleEditFormChange = (field: keyof Exercise, value: any) => {
@@ -637,231 +640,81 @@ export const ExerciseList: React.FC<ExerciseListProps> = ({ onDelete, activeWork
                         {format(exercise.date!, 'h:mm a')}
                       </TableCell>
                       <TableCell>
-                        {editingId === exercise.id ? (
-                          <TextField
-                            size="small"
-                            value={editForm?.category || ''}
-                            onChange={(e) => handleEditFormChange('category', e.target.value)}
-                          />
-                        ) : (
-                          exercise.category
-                        )}
+                        {exercise.category}
                       </TableCell>
                       <TableCell>
-                        {editingId === exercise.id ? (
-                          <TextField
-                            size="small"
-                            value={editForm?.name || ''}
-                            onChange={(e) => handleEditFormChange('name', e.target.value)}
-                          />
-                        ) : (
-                          exercise.name || ''
-                        )}
+                        {exercise.name || ''}
                       </TableCell>
                       <TableCell>
-                        {editingId === exercise.id ? (
-                          <TextField
-                            size="small"
-                            type="number"
-                            value={editForm?.reps || 0}
-                            onChange={(e) => handleEditFormChange('reps', Number(e.target.value))}
-                          />
-                        ) : (
-                          exercise.reps
-                        )}
+                        {exercise.reps}
                       </TableCell>
                       <TableCell>
-                        {editingId === exercise.id ? (
-                          <TextField
-                            size="small"
-                            type="number"
-                            value={editForm?.weight || 0}
-                            onChange={(e) => handleEditFormChange('weight', Number(e.target.value))}
-                          />
-                        ) : (
-                          exercise.weight
-                        )}
+                        {exercise.weight}
                       </TableCell>
                       <TableCell>
-                        {editingId === exercise.id ? (
-                          <Rating
-                            value={editForm?.rating || 0}
-                            onChange={(_, value) => handleEditFormChange('rating', value)}
-                            size="small"
-                          />
-                        ) : (
-                          <Rating value={exercise.rating || 0} readOnly size="small" />
-                        )}
+                        <Rating value={exercise.rating || 0} readOnly size="small" />
                       </TableCell>
                       <TableCell>
-                        {editingId === exercise.id ? (
-                          <TextField
-                            size="small"
-                            value={editForm?.notes || ''}
-                            onChange={(e) => handleEditFormChange('notes', e.target.value)}
-                          />
-                        ) : (
-                          exercise.notes || ''
-                        )}
+                        {exercise.notes || ''}
                       </TableCell>
                       <TableCell>
-                        {editingId === exercise.id ? (
-                          <Stack spacing={1}>
-                            <Box>
-                              <input
-                                accept="image/*"
-                                style={{ display: 'none' }}
-                                id={`image-upload-edit-${exercise.id}`}
-                                type="file"
-                                onChange={handleImageSelect}
-                              />
-                              <label htmlFor={`image-upload-edit-${exercise.id}`}>
-                                <Button
-                                  variant="outlined"
-                                  component="span"
+                        <Stack spacing={0.5}>
+                          {exercise.image_path && (
+                            <Box sx={{ display: 'flex', gap: 0.5 }}>
+                              <Tooltip title="View Image">
+                                <IconButton
                                   size="small"
-                                  startIcon={<PhotoCameraIcon />}
+                                  onClick={() => handleViewImage(exercise)}
+                                  color="primary"
                                 >
-                                  {editForm?.image_path || selectedImage ? 'Change Image' : 'Add Image'}
-                                </Button>
-                              </label>
-                              {(editForm?.image_path || imagePreview) && (
-                                <Box sx={{ mt: 1, position: 'relative', width: 60, height: 60 }}>
-                                  <img
-                                    src={imagePreview || imageService.getImageUrl(editForm?.image_path!)}
-                                    alt="Exercise"
-                                    onError={() => {
-                                      if (editForm?.image_path) {
-                                        console.error('Error loading image:', editForm.image_path);
-                                      }
-                                    }}
-                                    style={{
-                                      width: '60px',
-                                      height: '60px',
-                                      objectFit: 'cover',
-                                      borderRadius: '4px'
-                                    }}
-                                  />
+                                  <ImageIcon />
+                                </IconButton>
+                              </Tooltip>
+                              <Tooltip title={deletingImage ? 'Deleting...' : 'Delete Image'}>
+                                <span>
                                   <IconButton
                                     size="small"
-                                    onClick={handleRemoveImage}
-                                    sx={{
-                                      position: 'absolute',
-                                      top: -8,
-                                      right: -8,
-                                      bgcolor: 'background.paper'
-                                    }}
+                                    color="error"
+                                    disabled={deletingImage}
+                                    onClick={() => handleDeleteExerciseImage(exercise.id, exercise.image_path!)}
                                   >
-                                    <CloseIcon fontSize="small" />
+                                    <DeleteForeverIcon />
                                   </IconButton>
-                                </Box>
-                              )}
+                                </span>
+                              </Tooltip>
                             </Box>
-                            <Box>
-                              <input
-                                accept="video/*"
-                                style={{ display: 'none' }}
-                                id={`video-upload-edit-${exercise.id}`}
-                                type="file"
-                                onChange={handleVideoSelect}
-                              />
-                              <label htmlFor={`video-upload-edit-${exercise.id}`}>
-                                <Button
-                                  variant="outlined"
-                                  component="span"
+                          )}
+                          {exercise.video_path && (
+                            <Box sx={{ display: 'flex', gap: 0.5 }}>
+                              <Tooltip title="View Video">
+                                <IconButton
                                   size="small"
-                                  startIcon={<VideoCallIcon />}
+                                  onClick={() => handleViewVideo(exercise)}
+                                  color="primary"
                                 >
-                                  {editForm?.video_path || selectedVideo ? 'Change Video' : 'Add Video'}
-                                </Button>
-                              </label>
-                              {(editForm?.video_path || videoPreview) && (
-                                <Box sx={{ mt: 1, position: 'relative', width: 120 }}>
-                                  <video
-                                    src={videoPreview || imageService.getVideoUrl(editForm?.video_path!)}
-                                    style={{
-                                      width: '120px',
-                                      maxHeight: '80px',
-                                      borderRadius: '4px',
-                                      backgroundColor: 'black',
-                                    }}
-                                    controls
-                                  />
+                                  <VideoLibraryIcon />
+                                </IconButton>
+                              </Tooltip>
+                              <Tooltip title={deletingVideo ? 'Deleting...' : 'Delete Video'}>
+                                <span>
                                   <IconButton
                                     size="small"
-                                    onClick={handleRemoveVideo}
-                                    sx={{
-                                      position: 'absolute',
-                                      top: -8,
-                                      right: -8,
-                                      bgcolor: 'background.paper'
-                                    }}
+                                    color="error"
+                                    disabled={deletingVideo}
+                                    onClick={() => handleDeleteExerciseVideo(exercise.id, exercise.video_path!)}
                                   >
-                                    <CloseIcon fontSize="small" />
+                                    <DeleteForeverIcon />
                                   </IconButton>
-                                </Box>
-                              )}
+                                </span>
+                              </Tooltip>
                             </Box>
-                          </Stack>
-                        ) : (
-                          <Stack spacing={0.5}>
-                            {exercise.image_path && (
-                              <Box sx={{ display: 'flex', gap: 0.5 }}>
-                                <Tooltip title="View Image">
-                                  <IconButton
-                                    size="small"
-                                    onClick={() => handleViewImage(exercise)}
-                                    color="primary"
-                                  >
-                                    <ImageIcon />
-                                  </IconButton>
-                                </Tooltip>
-                                <Tooltip title={deletingImage ? 'Deleting...' : 'Delete Image'}>
-                                  <span>
-                                    <IconButton
-                                      size="small"
-                                      color="error"
-                                      disabled={deletingImage}
-                                      onClick={() => handleDeleteExerciseImage(exercise.id, exercise.image_path!)}
-                                    >
-                                      <DeleteForeverIcon />
-                                    </IconButton>
-                                  </span>
-                                </Tooltip>
-                              </Box>
-                            )}
-                            {exercise.video_path && (
-                              <Box sx={{ display: 'flex', gap: 0.5 }}>
-                                <Tooltip title="View Video">
-                                  <IconButton
-                                    size="small"
-                                    onClick={() => handleViewVideo(exercise)}
-                                    color="primary"
-                                  >
-                                    <VideoLibraryIcon />
-                                  </IconButton>
-                                </Tooltip>
-                                <Tooltip title={deletingVideo ? 'Deleting...' : 'Delete Video'}>
-                                  <span>
-                                    <IconButton
-                                      size="small"
-                                      color="error"
-                                      disabled={deletingVideo}
-                                      onClick={() => handleDeleteExerciseVideo(exercise.id, exercise.video_path!)}
-                                    >
-                                      <DeleteForeverIcon />
-                                    </IconButton>
-                                  </span>
-                                </Tooltip>
-                              </Box>
-                            )}
-                            {!exercise.image_path && !exercise.video_path && (
-                              <Typography variant="caption" color="text.secondary">
-                                No media
-                              </Typography>
-                            )}
-                          </Stack>
-                        )}
+                          )}
+                          {!exercise.image_path && !exercise.video_path && (
+                            <Typography variant="caption" color="text.secondary">
+                              No media
+                            </Typography>
+                          )}
+                        </Stack>
                       </TableCell>
                       <TableCell>
                         {exercise.workoutCategories ? (
@@ -879,43 +732,20 @@ export const ExerciseList: React.FC<ExerciseListProps> = ({ onDelete, activeWork
                         ) : null}
                       </TableCell>
                       <TableCell>
-                        {editingId === exercise.id ? (
-                          <>
-                            <IconButton
-                              onClick={handleSave}
-                              size="small"
-                              color="primary"
-                              disabled={uploading}
-                            >
-                              <SaveIcon />
-                            </IconButton>
-                            <IconButton
-                              onClick={handleCancel}
-                              size="small"
-                              color="error"
-                              disabled={uploading}
-                            >
-                              <CancelIcon />
-                            </IconButton>
-                          </>
-                        ) : (
-                          <>
-                            <IconButton
-                              onClick={() => handleEdit(exercise)}
-                              size="small"
-                              color="primary"
-                            >
-                              <EditIcon />
-                            </IconButton>
-                            <IconButton
-                              onClick={() => handleDelete(exercise.id)}
-                              size="small"
-                              color="error"
-                            >
-                              <DeleteIcon />
-                            </IconButton>
-                          </>
-                        )}
+                        <IconButton
+                          onClick={() => handleEdit(exercise)}
+                          size="small"
+                          color="primary"
+                        >
+                          <EditIcon />
+                        </IconButton>
+                        <IconButton
+                          onClick={() => handleDelete(exercise.id)}
+                          size="small"
+                          color="error"
+                        >
+                          <DeleteIcon />
+                        </IconButton>
                       </TableCell>
                     </TableRow>
                   ))}
@@ -1141,6 +971,464 @@ export const ExerciseList: React.FC<ExerciseListProps> = ({ onDelete, activeWork
           )}
           <Button onClick={() => setViewVideoDialogOpen(false)} variant="contained" disabled={deletingVideo}>
             Close
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Edit Exercise Dialog */}
+      <Dialog
+        open={editDialogOpen}
+        onClose={handleCancel}
+        maxWidth="sm"
+        fullWidth
+        PaperProps={{
+          sx: {
+            backgroundColor: '#1f1f1f',
+            backgroundImage: 'linear-gradient(135deg, #1f1f1f, #242424)',
+            border: '1px solid rgba(245, 128, 37, 0.2)',
+            borderRadius: '0.625rem',
+            boxShadow: '0 12px 28px rgba(245, 128, 37, 0.25)',
+            padding: '1.5rem',
+          }
+        }}
+      >
+        <DialogTitle
+          sx={{
+            fontFamily: 'var(--font-family-base)',
+            fontWeight: 700,
+            color: '#ffffff',
+            textTransform: 'uppercase',
+            letterSpacing: '0.02em',
+            padding: '0 0 1.5rem 0',
+            paddingLeft: 0,
+            paddingRight: 0,
+            paddingTop: 0,
+            borderBottom: '1px solid rgba(245, 128, 37, 0.2)',
+            position: 'relative',
+          }}
+        >
+          Edit Exercise
+          <IconButton
+            onClick={handleCancel}
+            sx={{
+              position: 'absolute',
+              right: 8,
+              top: 8,
+              color: 'rgba(255, 255, 255, 0.6)',
+              '&:hover': {
+                backgroundColor: 'rgba(245, 128, 37, 0.1)',
+                color: '#f58025',
+              },
+            }}
+          >
+            <CloseIcon />
+          </IconButton>
+        </DialogTitle>
+        <DialogContent sx={{ padding: '1.5rem 0 !important', paddingLeft: '0 !important', paddingRight: '0 !important', color: 'rgba(255, 255, 255, 0.85)' }}>
+          {editForm && (
+            <Stack spacing={3} sx={{ mt: 1 }}>
+              <TextField
+                label="Category"
+                fullWidth
+                value={editForm.category || ''}
+                onChange={(e) => handleEditFormChange('category', e.target.value)}
+                sx={{
+                  '& .MuiOutlinedInput-root': {
+                    backgroundColor: '#1f1f1f',
+                    color: '#ffffff',
+                    '& fieldset': {
+                      borderColor: 'rgba(245, 128, 37, 0.2)',
+                      borderWidth: '2px',
+                    },
+                    '&:hover fieldset': {
+                      borderColor: '#f58025',
+                    },
+                    '&.Mui-focused fieldset': {
+                      borderColor: '#f58025',
+                      boxShadow: '0 0 0 2px rgba(245, 128, 37, 0.2)',
+                    },
+                  },
+                  '& .MuiInputLabel-root': {
+                    color: 'rgba(160, 160, 160, 1)',
+                    '&.Mui-focused': {
+                      color: '#f58025',
+                    },
+                  },
+                }}
+              />
+              <TextField
+                label="Exercise Name"
+                fullWidth
+                value={editForm.name || ''}
+                onChange={(e) => handleEditFormChange('name', e.target.value)}
+                sx={{
+                  '& .MuiOutlinedInput-root': {
+                    backgroundColor: '#1f1f1f',
+                    color: '#ffffff',
+                    '& fieldset': {
+                      borderColor: 'rgba(245, 128, 37, 0.2)',
+                      borderWidth: '2px',
+                    },
+                    '&:hover fieldset': {
+                      borderColor: '#f58025',
+                    },
+                    '&.Mui-focused fieldset': {
+                      borderColor: '#f58025',
+                      boxShadow: '0 0 0 2px rgba(245, 128, 37, 0.2)',
+                    },
+                  },
+                  '& .MuiInputLabel-root': {
+                    color: 'rgba(160, 160, 160, 1)',
+                    '&.Mui-focused': {
+                      color: '#f58025',
+                    },
+                  },
+                }}
+              />
+              <TextField
+                label="Reps"
+                fullWidth
+                type="number"
+                value={editForm.reps || 0}
+                onChange={(e) => handleEditFormChange('reps', Number(e.target.value))}
+                sx={{
+                  '& .MuiOutlinedInput-root': {
+                    backgroundColor: '#1f1f1f',
+                    color: '#ffffff',
+                    '& fieldset': {
+                      borderColor: 'rgba(245, 128, 37, 0.2)',
+                      borderWidth: '2px',
+                    },
+                    '&:hover fieldset': {
+                      borderColor: '#f58025',
+                    },
+                    '&.Mui-focused fieldset': {
+                      borderColor: '#f58025',
+                      boxShadow: '0 0 0 2px rgba(245, 128, 37, 0.2)',
+                    },
+                  },
+                  '& .MuiInputLabel-root': {
+                    color: 'rgba(160, 160, 160, 1)',
+                    '&.Mui-focused': {
+                      color: '#f58025',
+                    },
+                  },
+                }}
+              />
+              <TextField
+                label="Weight (lbs)"
+                fullWidth
+                type="number"
+                value={editForm.weight || 0}
+                onChange={(e) => handleEditFormChange('weight', Number(e.target.value))}
+                sx={{
+                  '& .MuiOutlinedInput-root': {
+                    backgroundColor: '#1f1f1f',
+                    color: '#ffffff',
+                    '& fieldset': {
+                      borderColor: 'rgba(245, 128, 37, 0.2)',
+                      borderWidth: '2px',
+                    },
+                    '&:hover fieldset': {
+                      borderColor: '#f58025',
+                    },
+                    '&.Mui-focused fieldset': {
+                      borderColor: '#f58025',
+                      boxShadow: '0 0 0 2px rgba(245, 128, 37, 0.2)',
+                    },
+                  },
+                  '& .MuiInputLabel-root': {
+                    color: 'rgba(160, 160, 160, 1)',
+                    '&.Mui-focused': {
+                      color: '#f58025',
+                    },
+                  },
+                }}
+              />
+              <Box>
+                <Typography 
+                  component="legend" 
+                  sx={{ 
+                    mb: 1,
+                    color: 'rgba(160, 160, 160, 1)',
+                    fontWeight: 500,
+                  }}
+                >
+                  Rating
+                </Typography>
+                <Rating
+                  value={editForm.rating || 0}
+                  onChange={(_, value) => handleEditFormChange('rating', value)}
+                  sx={{
+                    '& .MuiRating-iconFilled': {
+                      color: '#f58025',
+                    },
+                    '& .MuiRating-iconEmpty': {
+                      color: 'rgba(245, 128, 37, 0.3)',
+                    },
+                  }}
+                />
+              </Box>
+              <TextField
+                label="Notes"
+                fullWidth
+                multiline
+                rows={4}
+                value={editForm.notes || ''}
+                onChange={(e) => handleEditFormChange('notes', e.target.value)}
+                sx={{
+                  '& .MuiOutlinedInput-root': {
+                    backgroundColor: '#1f1f1f',
+                    color: '#ffffff',
+                    '& fieldset': {
+                      borderColor: 'rgba(245, 128, 37, 0.2)',
+                      borderWidth: '2px',
+                    },
+                    '&:hover fieldset': {
+                      borderColor: '#f58025',
+                    },
+                    '&.Mui-focused fieldset': {
+                      borderColor: '#f58025',
+                      boxShadow: '0 0 0 2px rgba(245, 128, 37, 0.2)',
+                    },
+                  },
+                  '& .MuiInputLabel-root': {
+                    color: 'rgba(160, 160, 160, 1)',
+                    '&.Mui-focused': {
+                      color: '#f58025',
+                    },
+                  },
+                }}
+              />
+              <Box>
+                <Typography 
+                  component="legend" 
+                  sx={{ 
+                    mb: 1,
+                    color: 'rgba(160, 160, 160, 1)',
+                    fontWeight: 500,
+                  }}
+                >
+                  Image
+                </Typography>
+                <input
+                  accept="image/*"
+                  style={{ display: 'none' }}
+                  id="image-upload-edit-modal"
+                  type="file"
+                  onChange={handleImageSelect}
+                />
+                <label htmlFor="image-upload-edit-modal">
+                  <Button
+                    variant="outlined"
+                    component="span"
+                    startIcon={<PhotoCameraIcon />}
+                    sx={{ 
+                      mb: 2,
+                      border: '2px solid #f58025',
+                      color: '#f58025',
+                      backgroundColor: 'transparent',
+                      fontWeight: 700,
+                      textTransform: 'uppercase',
+                      letterSpacing: '0.05em',
+                      borderRadius: '50px',
+                      '&:hover': {
+                        borderColor: '#ff8c42',
+                        backgroundColor: 'rgba(255, 107, 53, 0.1)',
+                        color: '#ff8c42',
+                        boxShadow: '0 4px 12px rgba(245, 128, 37, 0.16)',
+                      },
+                    }}
+                  >
+                    {editForm.image_path || selectedImage ? 'Change Image' : 'Add Image'}
+                  </Button>
+                </label>
+                {(editForm.image_path || imagePreview) && (
+                  <Box sx={{ mt: 1, position: 'relative', display: 'inline-block' }}>
+                    <img
+                      src={imagePreview || imageService.getImageUrl(editForm.image_path!)}
+                      alt="Exercise"
+                      onError={() => {
+                        if (editForm.image_path) {
+                          console.error('Error loading image:', editForm.image_path);
+                        }
+                      }}
+                      style={{
+                        width: '200px',
+                        height: '200px',
+                        objectFit: 'cover',
+                        borderRadius: '4px'
+                      }}
+                    />
+                    <IconButton
+                      size="small"
+                      onClick={handleRemoveImage}
+                      sx={{
+                        position: 'absolute',
+                        top: -8,
+                        right: -8,
+                        bgcolor: '#1f1f1f',
+                        border: '1px solid rgba(245, 128, 37, 0.2)',
+                        color: '#ffffff',
+                        '&:hover': {
+                          backgroundColor: 'rgba(245, 128, 37, 0.1)',
+                          color: '#f58025',
+                        },
+                      }}
+                    >
+                      <CloseIcon fontSize="small" />
+                    </IconButton>
+                  </Box>
+                )}
+              </Box>
+              <Box>
+                <Typography 
+                  component="legend" 
+                  sx={{ 
+                    mb: 1,
+                    color: 'rgba(160, 160, 160, 1)',
+                    fontWeight: 500,
+                  }}
+                >
+                  Video
+                </Typography>
+                <input
+                  accept="video/*"
+                  style={{ display: 'none' }}
+                  id="video-upload-edit-modal"
+                  type="file"
+                  onChange={handleVideoSelect}
+                />
+                <label htmlFor="video-upload-edit-modal">
+                  <Button
+                    variant="outlined"
+                    component="span"
+                    startIcon={<VideoCallIcon />}
+                    sx={{ 
+                      mb: 2,
+                      border: '2px solid #f58025',
+                      color: '#f58025',
+                      backgroundColor: 'transparent',
+                      fontWeight: 700,
+                      textTransform: 'uppercase',
+                      letterSpacing: '0.05em',
+                      borderRadius: '50px',
+                      '&:hover': {
+                        borderColor: '#ff8c42',
+                        backgroundColor: 'rgba(255, 107, 53, 0.1)',
+                        color: '#ff8c42',
+                        boxShadow: '0 4px 12px rgba(245, 128, 37, 0.16)',
+                      },
+                    }}
+                  >
+                    {editForm.video_path || selectedVideo ? 'Change Video' : 'Add Video'}
+                  </Button>
+                </label>
+                {(editForm.video_path || videoPreview) && (
+                  <Box sx={{ mt: 1, position: 'relative', display: 'inline-block' }}>
+                    <video
+                      src={videoPreview || imageService.getVideoUrl(editForm.video_path!)}
+                      style={{
+                        width: '300px',
+                        maxHeight: '200px',
+                        borderRadius: '4px',
+                        backgroundColor: 'black',
+                      }}
+                      controls
+                    />
+                    <IconButton
+                      size="small"
+                      onClick={handleRemoveVideo}
+                      sx={{
+                        position: 'absolute',
+                        top: -8,
+                        right: -8,
+                        bgcolor: '#1f1f1f',
+                        border: '1px solid rgba(245, 128, 37, 0.2)',
+                        color: '#ffffff',
+                        '&:hover': {
+                          backgroundColor: 'rgba(245, 128, 37, 0.1)',
+                          color: '#f58025',
+                        },
+                      }}
+                    >
+                      <CloseIcon fontSize="small" />
+                    </IconButton>
+                  </Box>
+                )}
+              </Box>
+              {(imageError || videoError) && (
+                <Alert 
+                  severity="error"
+                  sx={{
+                    backgroundColor: '#ef4444',
+                    color: '#ffffff',
+                    border: '1px solid #ef4444',
+                    borderRadius: '0.625rem',
+                    fontWeight: 500,
+                    boxShadow: '0 8px 20px rgba(245, 128, 37, 0.2)',
+                  }}
+                >
+                  {imageError || videoError}
+                </Alert>
+              )}
+            </Stack>
+          )}
+        </DialogContent>
+        <DialogActions 
+          sx={{ 
+            justifyContent: 'flex-end', 
+            px: 0,
+            pt: '1.5rem',
+            pb: 0,
+            borderTop: '1px solid rgba(245, 128, 37, 0.2)',
+            gap: '0.5rem',
+          }}
+        >
+          <Button 
+            onClick={handleCancel} 
+            disabled={uploading}
+            sx={{
+              color: 'rgba(255, 255, 255, 0.85)',
+              fontWeight: 700,
+              textTransform: 'uppercase',
+              letterSpacing: '0.05em',
+              borderRadius: '50px',
+              '&:hover': {
+                backgroundColor: 'rgba(245, 128, 37, 0.1)',
+                color: '#f58025',
+              },
+            }}
+          >
+            Cancel
+          </Button>
+          <Button
+            onClick={handleSave}
+            variant="contained"
+            startIcon={<SaveIcon />}
+            disabled={uploading}
+            sx={{
+              background: 'linear-gradient(135deg, #f58025, #f58025)',
+              color: '#ffffff',
+              border: '2px solid #f58025',
+              fontWeight: 700,
+              textTransform: 'uppercase',
+              letterSpacing: '0.05em',
+              borderRadius: '50px',
+              boxShadow: '0 2px 4px rgba(245, 128, 37, 0.12)',
+              '&:hover': {
+                background: 'linear-gradient(135deg, #f58025, #f58025)',
+                borderColor: '#ff8c42',
+                boxShadow: '0 0 24px rgba(245, 128, 37, 0.35)',
+                transform: 'translateY(-2px)',
+                filter: 'brightness(1.1)',
+              },
+              '&:disabled': {
+                opacity: 0.5,
+              },
+            }}
+          >
+            {uploading ? 'Saving...' : 'Save'}
           </Button>
         </DialogActions>
       </Dialog>
