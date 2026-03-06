@@ -570,7 +570,8 @@ export const ExerciseList: React.FC<ExerciseListProps> = ({ onDelete, activeWork
               <TableCell>Category</TableCell>
               <TableCell>Exercise</TableCell>
               <TableCell>Reps</TableCell>
-              <TableCell>Weight (lbs)</TableCell>
+              <TableCell>Weight</TableCell>
+              <TableCell>Volume</TableCell>
               <TableCell>Rating</TableCell>
               <TableCell>Notes</TableCell>
               <TableCell>Media</TableCell>
@@ -589,7 +590,7 @@ export const ExerciseList: React.FC<ExerciseListProps> = ({ onDelete, activeWork
                   {/* Date Header Row */}
                   <TableRow>
                     <TableCell
-                      colSpan={10}
+                      colSpan={11}
                       sx={(theme) => ({
                         backgroundColor: 'rgba(255, 255, 255, 0.04)',
                         py: 1,
@@ -650,6 +651,9 @@ export const ExerciseList: React.FC<ExerciseListProps> = ({ onDelete, activeWork
                       </TableCell>
                       <TableCell>
                         {exercise.weight}
+                      </TableCell>
+                      <TableCell>
+                        {exercise.volume !== undefined ? Math.round(exercise.volume) : '—'}
                       </TableCell>
                       <TableCell>
                         <Rating value={exercise.rating || 0} readOnly size="small" />
@@ -1116,7 +1120,7 @@ export const ExerciseList: React.FC<ExerciseListProps> = ({ onDelete, activeWork
                 }}
               />
               <TextField
-                label="Weight (lbs)"
+                label="Weight"
                 fullWidth
                 type="number"
                 value={editForm.weight || 0}

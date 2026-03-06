@@ -4,6 +4,7 @@ export interface Exercise {
   category: string;
   reps: number;
   weight: number;
+  volume?: number;  // Generated column: reps * weight
   date: Date | null;
   rating: number | null;
   notes: string | null;

@@ -113,7 +113,7 @@ describe('ExerciseForm', () => {
     const repsInput = screen.getByLabelText('Reps');
     await user.type(repsInput, '10');
     
-    const weightInput = screen.getByLabelText('Weight (lbs)');
+    const weightInput = screen.getByLabelText('Weight');
     await user.type(weightInput, '225');
     
     // Submit the form
@@ -160,7 +160,7 @@ describe('ExerciseForm', () => {
     expect(screen.getByLabelText('Category')).toBeInvalid();
     expect(screen.getByLabelText('Exercise')).toBeInvalid();
     expect(screen.getByLabelText('Reps')).toBeInvalid();
-    expect(screen.getByLabelText('Weight (lbs)')).toBeInvalid();
+    expect(screen.getByLabelText('Weight')).toBeInvalid();
 
     // Verify onSubmit was not called
     expect(mockOnSubmit).not.toHaveBeenCalled();
