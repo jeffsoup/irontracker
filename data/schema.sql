@@ -23,6 +23,8 @@ add column restpause boolean null default false;
 alter table exercises 
 add column video_path text null;
 
+ALTER table exercises
+add column volume numeric null generated always as (reps * weight) stored
 
 
 create table public.workouts (
@@ -89,6 +91,25 @@ create table public.exercises_canonical (
   constraint exercises_canonical_pkey primary key (id)
 ) TABLESPACE pg_default;
 
+create or replace view progression_max as
+    SELECT category, name, weight, reps, date
+    FROM ( 
+      SELECT
+        category,
+        name, 
+        weight, 
+        reps,
+        volume,
+        to_char(date, 'mm/DD/YYYY') as date,
+        ROW_NUMBER() OVER (
+            PARTITION BY name
+            ORDER BY weight desc
+            )
+        AS rn 
+          from
+            exercises
+    ) AS subquery where rn = 1;
+    
 
 CREATE or REPLACE VIEW exercise_options AS
 select distinct name, category

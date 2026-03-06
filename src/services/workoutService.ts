@@ -123,6 +123,7 @@ export const workoutService = {
           category,
           reps,
           weight,
+          volume,
           workout,
           notes,
           workouts!inner(
@@ -151,6 +152,7 @@ export const workoutService = {
         category: item.category,
         reps: item.reps,
         weight: item.weight,
+        volume: item.volume,
         notes: item.notes,
         categories: (item.workouts as any)?.categories || [],
         is_active: (item.workouts as any)?.is_active || false,
