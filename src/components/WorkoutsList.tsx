@@ -19,6 +19,7 @@ import {
 } from '@mui/material';
 import { workoutService } from '../services/workoutService';
 import { Workout } from '../types/Exercise';
+import { getSupabase } from '../lib/supabase';
 
 interface WorkoutsListProps {
   activeWorkout: Workout | null;
@@ -28,6 +29,7 @@ interface WorkoutsListProps {
 
 export const WorkoutsList: React.FC<WorkoutsListProps> = ({ activeWorkout, onResume, onDelete }) => {
   const [workouts, setWorkouts] = useState<Workout[]>([]);
+  const [workoutVolumes, setWorkoutVolumes] = useState<{ [workoutId: string]: number }>({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
@@ -41,6 +43,32 @@ export const WorkoutsList: React.FC<WorkoutsListProps> = ({ activeWorkout, onRes
       setLoading(true);
       const data = await workoutService.getAllWorkouts();
       setWorkouts(data);
+      
+      // Calculate total volume for each workout
+      const volumes: { [workoutId: string]: number } = {};
+      const supabase = getSupabase();
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (user) {
+        for (const workout of data) {
+          const { data: exercises, error: exercisesError } = await supabase
+            .from('exercises')
+            .select('volume')
+            .eq('workout', workout.id)
+            .eq('user_id', user.id);
+          
+          if (!exercisesError && exercises) {
+            const totalVolume = exercises.reduce((sum, ex) => {
+              return sum + (ex.volume ?? 0);
+            }, 0);
+            volumes[workout.id] = totalVolume;
+          } else {
+            volumes[workout.id] = 0;
+          }
+        }
+      }
+      
+      setWorkoutVolumes(volumes);
       setError(null);
     } catch (err) {
       setError('Failed to load workouts');
@@ -95,6 +123,7 @@ export const WorkoutsList: React.FC<WorkoutsListProps> = ({ activeWorkout, onRes
             <TableRow>
               <TableCell>Date Created</TableCell>
               <TableCell>Categories</TableCell>
+              <TableCell>Total Volume</TableCell>
               <TableCell>Status</TableCell>
               <TableCell>Actions</TableCell>
             </TableRow>
@@ -112,6 +141,9 @@ export const WorkoutsList: React.FC<WorkoutsListProps> = ({ activeWorkout, onRes
                         <Chip key={cat} label={cat} size="small" variant="outlined" sx={{ fontSize: '0.75rem' }} />
                       ))}
                     </Box>
+                  </TableCell>
+                  <TableCell>
+                    {workoutVolumes[workout.id] !== undefined ? Math.round(workoutVolumes[workout.id]) : '—'}
                   </TableCell>
                   <TableCell>{status}</TableCell>
                   <TableCell>

@@ -531,7 +531,7 @@ export const ExerciseForm: React.FC<ExerciseFormProps> = ({ onSubmit, activeWork
           inputProps={{ min: 0 }}
         />
         <TextField
-          label="Weight (lbs)"
+          label="Weight"
           type="number"
           value={formData.weight}
           onChange={(e) => setFormData({ ...formData, weight: parseFloat(e.target.value) })}

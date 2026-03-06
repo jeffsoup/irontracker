@@ -18,6 +18,7 @@ interface LastWorkoutExercise {
   category: string;
   reps: number;
   weight: number;
+  volume?: number;
   categories: string[],
   workout: number,
   notes: string,
@@ -233,6 +234,11 @@ export const Home: React.FC = () => {
                           <Typography variant="body2" color="text.secondary">
                             {exercise.reps} reps
                           </Typography>
+                          {exercise.volume !== undefined && (
+                            <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
+                              Volume: {Math.round(exercise.volume)}
+                            </Typography>
+                          )}
                         </Box>
                       </Box>
                     </Paper>
