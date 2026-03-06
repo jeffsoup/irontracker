@@ -128,7 +128,7 @@ export const exerciseService = {
     const supabase = getSupabase();
     let query = supabase
       .from('progression_max')
-      .select('category, name, weight, reps, date')
+      .select('category, name, weight, reps, volume, date')
       .not('date', 'is', null)
       .order('date', { ascending: true });
     

@@ -45,7 +45,7 @@ ChartJS.register(
 );
 
 type SortOrder = 'asc' | 'desc';
-type ProgressionSortField = 'name' | 'category' | 'weight' | 'reps' | 'date';
+type ProgressionSortField = 'name' | 'category' | 'weight' | 'reps' | 'volume' | 'date';
 type UsageSortField = 'name' | 'category' | 'total';
 
 export const ChartsComponent: React.FC = () => {
@@ -188,6 +188,10 @@ export const ChartsComponent: React.FC = () => {
           aValue = a.reps ?? 0;
           bValue = b.reps ?? 0;
           break;
+        case 'volume':
+          aValue = a.volume ?? 0;
+          bValue = b.volume ?? 0;
+          break;
         case 'date':
           aValue = a.date ? new Date(a.date).getTime() : 0;
           bValue = b.date ? new Date(b.date).getTime() : 0;
@@ -264,7 +268,7 @@ export const ChartsComponent: React.FC = () => {
       labels,
       datasets: [
         {
-          label: 'Max Weight (lbs)',
+          label: 'Volume',
           data: weights,
           borderColor: '#f58025',
           backgroundColor: 'rgba(245, 128, 37, 0.1)',
@@ -294,7 +298,7 @@ export const ChartsComponent: React.FC = () => {
       labels,
       datasets: [
         {
-          label: 'Total Volume (lbs)',
+          label: 'Total Volume',
           data: volumes,
           borderColor: '#00d4ff',
           backgroundColor: 'rgba(0, 212, 255, 0.1)',
@@ -376,7 +380,7 @@ export const ChartsComponent: React.FC = () => {
             <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' }, gap: 3, mb: 4 }}>
               <Paper elevation={0} sx={{ p: 3, backgroundColor: 'rgba(255,255,255,0.03)', borderRadius: 3, border: '1px solid', borderColor: 'rgba(245,128,37,0.2)' }}>
                 <Typography variant="h5" sx={{ mb: 2 }}>
-                  Max weight (lbs) per session
+                  Volume per session
                 </Typography>
                 <Box sx={{ height: 300 }}>
                   {chartData.weightData && (
@@ -422,9 +426,9 @@ export const ChartsComponent: React.FC = () => {
                     <TableRow>
                       <TableCell>Date</TableCell>
                       <TableCell>Name</TableCell>
-                      <TableCell align="right">Max Weight (lbs)</TableCell>
+                      <TableCell align="right">Max Volume</TableCell>
                       <TableCell align="right">Max Reps</TableCell>
-                      <TableCell align="right">Total Volume (lbs)</TableCell>
+                      <TableCell align="right">Total Volume</TableCell>
                     </TableRow>
                   </TableHead>
                   <TableBody>
@@ -503,7 +507,7 @@ export const ChartsComponent: React.FC = () => {
       <Paper elevation={0} sx={{ mb: 4, p: 3, backgroundColor: 'rgba(255,255,255,0.03)', borderRadius: 3, border: '1px solid', borderColor: 'rgba(245,128,37,0.2)' }}>
         <Typography variant="h4" sx={{ mb: 2 }}>
           {selectedCategory === 'All'
-            ? 'Progression (Max Weight per Exercise)'
+            ? 'Progression (Max Volume per Exercise)'
             : selectedExercise === 'All'
               ? `Progression - ${selectedCategory}`
               : `Progression - ${selectedCategory} / ${selectedExercise}`}
@@ -549,9 +553,9 @@ export const ChartsComponent: React.FC = () => {
                   </TableCell>
                   <TableCell align="right">
                     <TableSortLabel
-                      active={progressionSortField === 'weight'}
-                      direction={progressionSortField === 'weight' ? progressionSortOrder : 'asc'}
-                      onClick={() => handleProgressionSort('weight')}
+                      active={progressionSortField === 'volume'}
+                      direction={progressionSortField === 'volume' ? progressionSortOrder : 'asc'}
+                      onClick={() => handleProgressionSort('volume')}
                       sx={{
                         '&.Mui-active': {
                           color: '#6f9c3d',
@@ -561,7 +565,7 @@ export const ChartsComponent: React.FC = () => {
                         },
                       }}
                     >
-                      Max Weight
+                      Max Volume
                     </TableSortLabel>
                   </TableCell>
                   <TableCell align="right">
@@ -625,7 +629,7 @@ export const ChartsComponent: React.FC = () => {
                         <Chip label={item.category} size="small" color="primary" variant="outlined" />
                       ) : '—'}
                     </TableCell>
-                    <TableCell align="right">{item.weight ?? '—'}</TableCell>
+                    <TableCell align="right">{item.volume !== undefined ? Math.round(item.volume) : '—'}</TableCell>
                     <TableCell align="right">{item.reps ?? '—'}</TableCell>
                     <TableCell>{item.date ? new Date(item.date).toLocaleDateString() : '—'}</TableCell>
                   </TableRow>
