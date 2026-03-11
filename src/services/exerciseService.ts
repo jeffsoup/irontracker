@@ -146,6 +146,28 @@ export const exerciseService = {
     })) || [];
   },
 
+  async getProgressionDataByWeight(category?: string): Promise<any[]> {
+    const supabase = getSupabase();
+    let query = supabase
+      .from('progression_max')
+      .select('category, name, weight, reps, date')
+      .not('date', 'is', null)
+      .order('date', { ascending: true });
+    
+    if (category) {
+      query = query.eq('category', category);
+    }
+
+    const { data, error } = await query;
+
+    if (error) throw error;
+    
+    return data?.map(item => ({
+      ...item,
+      date: item.date ? new Date(item.date) : null
+    })) || [];
+  },
+
   async getExerciseUsageData(category?: string): Promise<any[]> {
     const supabase = getSupabase();
     let query = supabase
@@ -378,5 +400,23 @@ export const exerciseService = {
     return Array.from(groupedByDate.values())
       .sort((a, b) => new Date(b.exercise_date).getTime() - new Date(a.exercise_date).getTime())
       .reverse(); // Reverse to get ascending order
+  },
+
+  async getVolumeByWeek(): Promise<any[]> {
+    const supabase = getSupabase();
+    // Get the current user
+    const { data: { user }, error: userError } = await supabase.auth.getUser();
+    if (userError) throw userError;
+    if (!user) throw new Error('User must be authenticated to get volume by week');
+    
+    const { data, error } = await supabase
+      .rpc('get_volume_by_week', { user_id: user.id });
+
+    if (error) throw error;
+    
+    return data?.map((item: any) => ({
+      week: new Date(item.week),
+      vol: item.vol || 0
+    })) || [];
   }
 };
