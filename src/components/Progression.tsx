@@ -20,13 +20,14 @@ import {
   Link,
 } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
-import { Line } from 'react-chartjs-2';
+import { Line, Bar } from 'react-chartjs-2';
 import {
   Chart as ChartJS,
   CategoryScale,
   LinearScale,
   PointElement,
   LineElement,
+  BarElement,
   Title,
   Tooltip,
   Legend,
@@ -39,6 +40,7 @@ ChartJS.register(
   LinearScale,
   PointElement,
   LineElement,
+  BarElement,
   Title,
   Tooltip,
   Legend
@@ -46,10 +48,12 @@ ChartJS.register(
 
 type SortOrder = 'asc' | 'desc';
 type ProgressionSortField = 'name' | 'category' | 'weight' | 'reps' | 'volume' | 'date';
+type WeightProgressionSortField = 'name' | 'category' | 'weight' | 'reps' | 'date';
 type UsageSortField = 'name' | 'category' | 'total';
 
 export const ChartsComponent: React.FC = () => {
   const [progressionData, setProgressionData] = useState<any[]>([]);
+  const [weightProgressionData, setWeightProgressionData] = useState<any[]>([]);
   const [usageData, setUsageData] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -59,11 +63,15 @@ export const ChartsComponent: React.FC = () => {
   const [availableExercises, setAvailableExercises] = useState<string[]>([]);
   const [progressionSortField, setProgressionSortField] = useState<ProgressionSortField>('date');
   const [progressionSortOrder, setProgressionSortOrder] = useState<SortOrder>('desc');
+  const [weightProgressionSortField, setWeightProgressionSortField] = useState<WeightProgressionSortField>('date');
+  const [weightProgressionSortOrder, setWeightProgressionSortOrder] = useState<SortOrder>('desc');
   const [usageSortField, setUsageSortField] = useState<UsageSortField>('total');
   const [usageSortOrder, setUsageSortOrder] = useState<SortOrder>('desc');
   const [drillDownExercise, setDrillDownExercise] = useState<string | null>(null);
   const [exerciseHistoryAggregated, setExerciseHistoryAggregated] = useState<any[]>([]);
   const [loadingHistory, setLoadingHistory] = useState(false);
+  const [volumeByWeek, setVolumeByWeek] = useState<any[]>([]);
+  const [loadingVolumeByWeek, setLoadingVolumeByWeek] = useState(false);
 
   useEffect(() => {
     const fetchCategories = async () => {
@@ -82,17 +90,22 @@ export const ChartsComponent: React.FC = () => {
     const fetchProgressionData = async () => {
       try {
         setLoading(true);
-        const [progData, usageData] = await Promise.all([
+        const [progData, weightProgData, usageData] = await Promise.all([
           exerciseService.getProgressionData(selectedCategory === 'All' ? undefined : selectedCategory),
+          exerciseService.getProgressionDataByWeight(selectedCategory === 'All' ? undefined : selectedCategory),
           exerciseService.getExerciseUsageData(selectedCategory === 'All' ? undefined : selectedCategory)
         ]);
         const filteredProg = selectedExercise === 'All'
           ? progData
-          : progData.filter((item) => item.name === selectedExercise);
+          : progData.filter((item: any) => item.name === selectedExercise);
+        const filteredWeightProg = selectedExercise === 'All'
+          ? weightProgData
+          : weightProgData.filter((item: any) => item.name === selectedExercise);
         const filteredUsage = selectedExercise === 'All'
           ? usageData
-          : usageData.filter((item) => item.name === selectedExercise);
+          : usageData.filter((item: any) => item.name === selectedExercise);
         setProgressionData(filteredProg);
+        setWeightProgressionData(filteredWeightProg);
         setUsageData(filteredUsage);
         setError(null);
       } catch (err) {
@@ -124,6 +137,22 @@ export const ChartsComponent: React.FC = () => {
     fetchExercises();
   }, [selectedCategory]);
 
+  useEffect(() => {
+    const fetchVolumeByWeek = async () => {
+      try {
+        setLoadingVolumeByWeek(true);
+        const data = await exerciseService.getVolumeByWeek();
+        setVolumeByWeek(data);
+      } catch (err) {
+        console.error('Error fetching volume by week:', err);
+      } finally {
+        setLoadingVolumeByWeek(false);
+      }
+    };
+
+    fetchVolumeByWeek();
+  }, []);
+
   const handleCategoryChange = (event: any) => {
     const newCategory = event.target.value;
     setSelectedCategory(newCategory);
@@ -138,6 +167,12 @@ export const ChartsComponent: React.FC = () => {
     const isAsc = progressionSortField === field && progressionSortOrder === 'asc';
     setProgressionSortField(field);
     setProgressionSortOrder(isAsc ? 'desc' : 'asc');
+  };
+
+  const handleWeightProgressionSort = (field: WeightProgressionSortField) => {
+    const isAsc = weightProgressionSortField === field && weightProgressionSortOrder === 'asc';
+    setWeightProgressionSortField(field);
+    setWeightProgressionSortOrder(isAsc ? 'desc' : 'asc');
   };
 
   const handleUsageSort = (field: UsageSortField) => {
@@ -210,6 +245,48 @@ export const ChartsComponent: React.FC = () => {
     });
     return sorted;
   }, [progressionData, progressionSortField, progressionSortOrder]);
+
+  const sortedWeightProgressionData = useMemo(() => {
+    const sorted = [...weightProgressionData];
+    sorted.sort((a, b) => {
+      let aValue: any;
+      let bValue: any;
+
+      switch (weightProgressionSortField) {
+        case 'name':
+          aValue = (a.name || '').toLowerCase();
+          bValue = (b.name || '').toLowerCase();
+          break;
+        case 'category':
+          aValue = (a.category || '').toLowerCase();
+          bValue = (b.category || '').toLowerCase();
+          break;
+        case 'weight':
+          aValue = a.weight ?? 0;
+          bValue = b.weight ?? 0;
+          break;
+        case 'reps':
+          aValue = a.reps ?? 0;
+          bValue = b.reps ?? 0;
+          break;
+        case 'date':
+          aValue = a.date ? new Date(a.date).getTime() : 0;
+          bValue = b.date ? new Date(b.date).getTime() : 0;
+          break;
+        default:
+          return 0;
+      }
+
+      if (aValue < bValue) {
+        return weightProgressionSortOrder === 'asc' ? -1 : 1;
+      }
+      if (aValue > bValue) {
+        return weightProgressionSortOrder === 'asc' ? 1 : -1;
+      }
+      return 0;
+    });
+    return sorted;
+  }, [weightProgressionData, weightProgressionSortField, weightProgressionSortOrder]);
 
   const sortedUsageData = useMemo(() => {
     const sorted = [...usageData];
@@ -405,7 +482,7 @@ export const ChartsComponent: React.FC = () => {
             <Box sx={{ mb: 4 }}>
               <Paper elevation={0} sx={{ p: 3, backgroundColor: 'rgba(255,255,255,0.03)', borderRadius: 3, border: '1px solid', borderColor: 'rgba(245,128,37,0.2)' }}>
                 <Typography variant="h5" sx={{ mb: 2 }}>
-                  Total Volume (weight x reps) per session
+                  Total Volume (reps xweight) per session
                 </Typography>
                 <Box sx={{ height: 300 }}>
                   {chartData.volumeData && (
@@ -642,6 +719,144 @@ export const ChartsComponent: React.FC = () => {
         )}
       </Paper>
 
+      <Paper elevation={0} sx={{ mb: 4, p: 3, backgroundColor: 'rgba(255,255,255,0.03)', borderRadius: 3, border: '1px solid', borderColor: 'rgba(245,128,37,0.2)' }}>
+        <Typography variant="h4" sx={{ mb: 2 }}>
+          {selectedCategory === 'All'
+            ? 'Progression (Max Weight per Exercise)'
+            : selectedExercise === 'All'
+              ? `Progression by Weight - ${selectedCategory}`
+              : `Progression by Weight - ${selectedCategory} / ${selectedExercise}`}
+        </Typography>
+        {weightProgressionData.length > 0 ? (
+          <TableContainer>
+            <Table size="small">
+              <TableHead>
+                <TableRow>
+                  <TableCell>
+                    <TableSortLabel
+                      active={weightProgressionSortField === 'name'}
+                      direction={weightProgressionSortField === 'name' ? weightProgressionSortOrder : 'asc'}
+                      onClick={() => handleWeightProgressionSort('name')}
+                      sx={{
+                        '&.Mui-active': {
+                          color: '#6f9c3d',
+                        },
+                        '&:hover': {
+                          color: '#6f9c3d',
+                        },
+                      }}
+                    >
+                      Exercise
+                    </TableSortLabel>
+                  </TableCell>
+                  <TableCell>
+                    <TableSortLabel
+                      active={weightProgressionSortField === 'category'}
+                      direction={weightProgressionSortField === 'category' ? weightProgressionSortOrder : 'asc'}
+                      onClick={() => handleWeightProgressionSort('category')}
+                      sx={{
+                        '&.Mui-active': {
+                          color: '#6f9c3d',
+                        },
+                        '&:hover': {
+                          color: '#6f9c3d',
+                        },
+                      }}
+                    >
+                      Category
+                    </TableSortLabel>
+                  </TableCell>
+                  <TableCell align="right">
+                    <TableSortLabel
+                      active={weightProgressionSortField === 'weight'}
+                      direction={weightProgressionSortField === 'weight' ? weightProgressionSortOrder : 'asc'}
+                      onClick={() => handleWeightProgressionSort('weight')}
+                      sx={{
+                        '&.Mui-active': {
+                          color: '#6f9c3d',
+                        },
+                        '&:hover': {
+                          color: '#6f9c3d',
+                        },
+                      }}
+                    >
+                      Max Weight
+                    </TableSortLabel>
+                  </TableCell>
+                  <TableCell align="right">
+                    <TableSortLabel
+                      active={weightProgressionSortField === 'reps'}
+                      direction={weightProgressionSortField === 'reps' ? weightProgressionSortOrder : 'asc'}
+                      onClick={() => handleWeightProgressionSort('reps')}
+                      sx={{
+                        '&.Mui-active': {
+                          color: '#6f9c3d',
+                        },
+                        '&:hover': {
+                          color: '#6f9c3d',
+                        },
+                      }}
+                    >
+                      Reps
+                    </TableSortLabel>
+                  </TableCell>
+                  <TableCell>
+                    <TableSortLabel
+                      active={weightProgressionSortField === 'date'}
+                      direction={weightProgressionSortField === 'date' ? weightProgressionSortOrder : 'asc'}
+                      onClick={() => handleWeightProgressionSort('date')}
+                      sx={{
+                        '&.Mui-active': {
+                          color: '#6f9c3d',
+                        },
+                        '&:hover': {
+                          color: '#6f9c3d',
+                        },
+                      }}
+                    >
+                      Date
+                    </TableSortLabel>
+                  </TableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {sortedWeightProgressionData.map((item, index) => (
+                  <TableRow key={`${item.name}-${index}`} hover>
+                    <TableCell sx={{ fontWeight: 500 }}>
+                      <Link
+                        component="button"
+                        variant="body2"
+                        onClick={() => handleExerciseClick(item.name)}
+                        sx={{
+                          color: '#6f9c3d',
+                          textDecoration: 'none',
+                          cursor: 'pointer',
+                          '&:hover': {
+                            textDecoration: 'underline',
+                          },
+                        }}
+                      >
+                        {item.name || '—'}
+                      </Link>
+                    </TableCell>
+                    <TableCell>
+                      {item.category ? (
+                        <Chip label={item.category} size="small" color="primary" variant="outlined" />
+                      ) : '—'}
+                    </TableCell>
+                    <TableCell align="right">{item.weight ?? '—'}</TableCell>
+                    <TableCell align="right">{item.reps ?? '—'}</TableCell>
+                    <TableCell>{item.date ? new Date(item.date).toLocaleDateString() : '—'}</TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </TableContainer>
+        ) : (
+          renderEmptyState('No progression data available')
+        )}
+      </Paper>
+
       <Paper elevation={0} sx={{ p: 3, backgroundColor: 'rgba(255,255,255,0.03)', borderRadius: 3, border: '1px solid', borderColor: 'rgba(245,128,37,0.2)' }}>
         <Typography variant="h4" sx={{ mb: 2 }}>
           {selectedCategory === 'All'
@@ -741,6 +956,76 @@ export const ChartsComponent: React.FC = () => {
           </TableContainer>
         ) : (
           renderEmptyState('No usage data available')
+        )}
+      </Paper>
+
+      {/* Volume by Week Chart */}
+      <Paper elevation={0} sx={{ mb: 4, p: 3, backgroundColor: 'rgba(255,255,255,0.03)', borderRadius: 3, border: '1px solid', borderColor: 'rgba(245,128,37,0.2)' }}>
+        <Typography variant="h4" sx={{ mb: 2 }}>
+          Total Volume by Week
+        </Typography>
+        {loadingVolumeByWeek ? (
+          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', p: 6 }}>
+            <CircularProgress />
+          </Box>
+        ) : volumeByWeek.length > 0 ? (
+          <Box sx={{ height: 400 }}>
+            <Bar
+              data={{
+                labels: volumeByWeek.map(item => format(new Date(item.week), 'MMM d, yyyy')),
+                datasets: [
+                  {
+                    label: 'Total Volume (reps x weight)',
+                    data: volumeByWeek.map(item => Math.round(item.vol)),
+                    backgroundColor: 'rgba(245, 128, 37, 0.8)',
+                    borderColor: '#f58025',
+                    borderWidth: 1,
+                  },
+                ],
+              }}
+              options={{
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                  legend: {
+                    display: true,
+                    labels: {
+                      color: '#ffffff',
+                    },
+                  },
+                  tooltip: {
+                    backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                    titleColor: '#ffffff',
+                    bodyColor: '#ffffff',
+                    borderColor: '#f58025',
+                    borderWidth: 1,
+                  },
+                },
+                scales: {
+                  x: {
+                    ticks: {
+                      color: '#ffffff',
+                      maxRotation: 45,
+                      minRotation: 45,
+                    },
+                    grid: {
+                      color: 'rgba(255, 255, 255, 0.1)',
+                    },
+                  },
+                  y: {
+                    ticks: {
+                      color: '#ffffff',
+                    },
+                    grid: {
+                      color: 'rgba(255, 255, 255, 0.1)',
+                    },
+                  },
+                },
+              }}
+            />
+          </Box>
+        ) : (
+          renderEmptyState('No volume data available')
         )}
       </Paper>
     </Box>

@@ -109,7 +109,7 @@ create or replace view progression_max as
           from
             exercises
     ) AS subquery where rn = 1;
-    
+
 
 CREATE or REPLACE VIEW exercise_options AS
 select distinct name, category
@@ -132,3 +132,20 @@ CREATE OR REPLACE view exercise_usage as
   ORDER BY
     total desc, name DESC
 GRANT SELECT ON TABLE exercise_usage TO PUBLIC;      
+
+
+//Volume by week
+CREATE OR REPLACE FUNCTION get_volume_by_week(user_id uuid)
+RETURNS TABLE (week date, vol numeric) AS '
+  SELECT 
+    DATE_TRUNC(''week'', created_at) AS week, 
+    SUM(volume) as vol
+FROM 
+    exercises 
+WHERE 
+  user_id = $1
+GROUP BY 
+    week 
+ORDER BY 
+    week
+' LANGUAGE SQL;
