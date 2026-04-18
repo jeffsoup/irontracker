@@ -1,5 +1,16 @@
 import { useState, useEffect } from 'react'
-import { Typography, Box, Snackbar, Alert, Button } from '@mui/material'
+import {
+  Typography,
+  Box,
+  Snackbar,
+  Alert,
+  Button,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogContentText,
+  DialogActions,
+} from '@mui/material'
 import { ExerciseTabs } from './components/ExerciseTabs'
 import { WorkoutDialog } from './components/WorkoutDialog'
 import { AuthForm } from './components/AuthForm'
@@ -49,6 +60,7 @@ function App() {
   const [snackbarOpen, setSnackbarOpen] = useState(false)
   const [snackbarMessage, setSnackbarMessage] = useState('')
   const [dialogOpen, setDialogOpen] = useState(false)
+  const [finishConfirmOpen, setFinishConfirmOpen] = useState(false)
   const [activeWorkout, setActiveWorkout] = useState<Workout | null>(null)
 
   useEffect(() => {
@@ -110,6 +122,11 @@ function App() {
       console.error('Error finishing workout:', error)
       showSnackbar('Failed to finish workout', 'error')
     }
+  }
+
+  const handleConfirmFinishWorkout = async () => {
+    setFinishConfirmOpen(false)
+    await handleFinishWorkout()
   }
 
   const showSnackbar = (message: string, _severity: 'success' | 'error' = 'success') => {
@@ -184,7 +201,7 @@ function App() {
                     <Button
                       variant="contained"
                       color={activeWorkout ? 'secondary' : 'primary'}
-                      onClick={activeWorkout ? handleFinishWorkout : () => {
+                      onClick={activeWorkout ? () => setFinishConfirmOpen(true) : () => {
                         setDialogOpen(true);
                       }}
                       sx={{
@@ -220,6 +237,32 @@ function App() {
                   onClose={() => setDialogOpen(false)}
                   onStart={handleStartWorkout}
                 />
+
+                <Dialog
+                  open={finishConfirmOpen}
+                  onClose={() => setFinishConfirmOpen(false)}
+                  aria-labelledby="finish-workout-dialog-title"
+                >
+                  <DialogTitle id="finish-workout-dialog-title">
+                    Finish workout?
+                  </DialogTitle>
+                  <DialogContent>
+                    <DialogContentText>
+                      This will mark your current workout as complete. You can re-open it from the Workouts tab if you need to add more sets later.
+                    </DialogContentText>
+                  </DialogContent>
+                  <DialogActions>
+                    <Button onClick={() => setFinishConfirmOpen(false)}>Cancel</Button>
+                    <Button
+                      onClick={handleConfirmFinishWorkout}
+                      color="secondary"
+                      variant="contained"
+                      autoFocus
+                    >
+                      Finish workout
+                    </Button>
+                  </DialogActions>
+                </Dialog>
 
                 <Snackbar
                   open={snackbarOpen}
