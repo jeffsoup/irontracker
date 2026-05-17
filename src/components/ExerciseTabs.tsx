@@ -6,6 +6,7 @@ import { WorkoutsList } from './WorkoutsList';
 import { ChartsComponent } from './Progression';
 import { Home } from './Home';
 import { Profile } from './Profile';
+import { RestTimer } from './RestTimer';
 import { ExerciseFormData, Workout } from '../types/Exercise';
 import { exerciseService } from '../services/exerciseService';
 import { workoutService } from '../services/workoutService';
@@ -52,6 +53,7 @@ export const ExerciseTabs: React.FC<ExerciseTabsProps> = ({
   setActiveWorkout
 }) => {
   const [value, setValue] = useState(0);
+  const [showTimer, setShowTimer] = useState(false);
 
   const handleChange = (_: React.SyntheticEvent, newValue: number) => {
     setValue(newValue);
@@ -75,6 +77,7 @@ export const ExerciseTabs: React.FC<ExerciseTabsProps> = ({
       });
       setValue(0); // Switch to history tab after adding
       onShowSnackbar('Exercise added successfully!');
+      setShowTimer(true);
     } catch (error) {
       console.error('Error adding exercise:', error);
       onShowSnackbar('Failed to add exercise', 'error');
@@ -149,6 +152,7 @@ export const ExerciseTabs: React.FC<ExerciseTabsProps> = ({
       <TabPanel value={value} index={5}>
         <Profile />
       </TabPanel>
+      {showTimer && <RestTimer onDismiss={() => setShowTimer(false)} />}
     </Box>
   );
 };
