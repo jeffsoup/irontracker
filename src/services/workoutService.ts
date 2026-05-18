@@ -103,6 +103,31 @@ export const workoutService = {
     })) || [];
   },
 
+  async getAllWorkoutsWithVolumes(): Promise<{ workouts: Workout[]; volumes: Record<string, number> }> {
+    const supabase = getSupabase();
+    const { data, error } = await supabase
+      .from('workouts')
+      .select('*, exercises(volume)')
+      .order('created_at', { ascending: false });
+    if (error) throw error;
+
+    const workouts: Workout[] = [];
+    const volumes: Record<string, number> = {};
+
+    for (const w of data ?? []) {
+      const { exercises, ...workoutData } = w;
+      workouts.push({
+        ...workoutData,
+        created_at: new Date(w.created_at),
+        ended_at: w.ended_at ? new Date(w.ended_at) : null,
+      });
+      volumes[w.id] = ((exercises ?? []) as { volume: number | null }[])
+        .reduce((sum, ex) => sum + (ex.volume ?? 0), 0);
+    }
+
+    return { workouts, volumes };
+  },
+
   async deleteWorkout(id: string): Promise<void> {
     const supabase = getSupabase();
     // Delete all exercises associated with this workout (if not using ON DELETE CASCADE)

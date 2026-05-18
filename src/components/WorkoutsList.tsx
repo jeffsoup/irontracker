@@ -19,7 +19,6 @@ import {
 } from '@mui/material';
 import { workoutService } from '../services/workoutService';
 import { Workout } from '../types/Exercise';
-import { getSupabase } from '../lib/supabase';
 
 interface WorkoutsListProps {
   activeWorkout: Workout | null;
@@ -41,33 +40,8 @@ export const WorkoutsList: React.FC<WorkoutsListProps> = ({ activeWorkout, onRes
   const loadWorkouts = async () => {
     try {
       setLoading(true);
-      const data = await workoutService.getAllWorkouts();
-      setWorkouts(data);
-      
-      // Calculate total volume for each workout
-      const volumes: { [workoutId: string]: number } = {};
-      const supabase = getSupabase();
-      const { data: { user } } = await supabase.auth.getUser();
-      
-      if (user) {
-        for (const workout of data) {
-          const { data: exercises, error: exercisesError } = await supabase
-            .from('exercises')
-            .select('volume')
-            .eq('workout', workout.id)
-            .eq('user_id', user.id);
-          
-          if (!exercisesError && exercises) {
-            const totalVolume = exercises.reduce((sum, ex) => {
-              return sum + (ex.volume ?? 0);
-            }, 0);
-            volumes[workout.id] = totalVolume;
-          } else {
-            volumes[workout.id] = 0;
-          }
-        }
-      }
-      
+      const { workouts, volumes } = await workoutService.getAllWorkoutsWithVolumes();
+      setWorkouts(workouts);
       setWorkoutVolumes(volumes);
       setError(null);
     } catch (err) {

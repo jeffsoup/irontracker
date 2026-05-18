@@ -149,3 +149,7 @@ GROUP BY
 ORDER BY 
     week
 ' LANGUAGE SQL;
+
+//New Indexes
+CREATE INDEX workouts_user_created_idx ON workouts (user_id, created_at DESC);
+CREATE INDEX exercises_workout_idx ON exercises (workout);
