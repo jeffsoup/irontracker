@@ -9,7 +9,6 @@ import '@testing-library/jest-dom';
 vi.mock('../../services/exerciseService', () => ({
   exerciseService: {
     getExerciseNamesByCategory: vi.fn(),
-    getRecommendedExercises: vi.fn(),
     getMostRecentExerciseForWorkout: vi.fn(),
     getExercises: vi.fn(),
     hasUserExercises: vi.fn(),
@@ -63,10 +62,6 @@ describe('ExerciseForm', () => {
     vi.clearAllMocks();
     // Setup default mock responses
     (exerciseService.getExerciseNamesByCategory as any).mockResolvedValue(['Bench Press', 'Squats']);
-    (exerciseService.getRecommendedExercises as any).mockResolvedValue([
-      { name: 'Bench Press', lastUsed: new Date('2024-01-01') },
-      { name: 'Squats', lastUsed: new Date('2024-01-02') },
-    ]);
     (exerciseService.getMostRecentExerciseForWorkout as any).mockResolvedValue(null);
     (exerciseService.getExercises as any).mockResolvedValue([]);
     (exerciseService.hasUserExercises as any).mockResolvedValue(true);
@@ -110,7 +105,6 @@ describe('ExerciseForm', () => {
     // Wait for the service to be called with the selected category
     await waitFor(() => {
       expect(exerciseService.getExerciseNamesByCategory).toHaveBeenCalledWith('Strength');
-      expect(exerciseService.getRecommendedExercises).toHaveBeenCalledWith('Strength');
     });
   });
 
@@ -143,7 +137,7 @@ describe('ExerciseForm', () => {
     // Fill in reps
     const repsInput = screen.getByRole('spinbutton', { name: /Reps/i });
     await user.clear(repsInput);
-    await user.type(repsInput, '10');
+    await user.type(repsInput, '10.5');
 
     // Fill in weight
     const weightInput = screen.getByRole('spinbutton', { name: /Weight/i });
@@ -159,7 +153,7 @@ describe('ExerciseForm', () => {
       expect(mockOnSubmit).toHaveBeenCalledWith(expect.objectContaining({
         name: 'Bench Press',
         category: 'Strength',
-        reps: 10,
+        reps: 10.5,
         weight: 225,
         workout: '123',
       }));

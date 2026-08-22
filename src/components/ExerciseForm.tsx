@@ -11,8 +11,6 @@ import {
   Select,
   MenuItem,
   Autocomplete,
-  Paper,
-  Chip,
   Dialog,
   DialogTitle,
   DialogContent,
@@ -26,7 +24,6 @@ import CloseIcon from '@mui/icons-material/Close';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
-import { format } from 'date-fns';
 import { ExerciseFormData, Workout } from '../types/Exercise';
 import { exerciseService } from '../services/exerciseService';
 import { imageService } from '../services/imageService';
@@ -35,11 +32,6 @@ import { supabase } from '../lib/supabase';
 interface ExerciseFormProps {
   onSubmit: (exercise: ExerciseFormData) => void;
   activeWorkout: Workout | null;
-}
-
-interface RecommendedExercise {
-  name: string;
-  lastUsed: Date;
 }
 
 export const ExerciseForm: React.FC<ExerciseFormProps> = ({ onSubmit, activeWorkout }) => {
@@ -61,7 +53,6 @@ export const ExerciseForm: React.FC<ExerciseFormProps> = ({ onSubmit, activeWork
 
   const [exerciseNames, setExerciseNames] = useState<string[]>([]);
   const [categories, setCategories] = useState<string[]>([]);
-  const [recommendedExercises, setRecommendedExercises] = useState<RecommendedExercise[]>([]);
   const [selectedImage, setSelectedImage] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [imageDialogOpen, setImageDialogOpen] = useState(false);
@@ -185,26 +176,19 @@ export const ExerciseForm: React.FC<ExerciseFormProps> = ({ onSubmit, activeWork
 
   useEffect(() => {
     if (formData.category) {
-      // Fetch both exercise names and recommendations
-      Promise.all([
-        exerciseService.getExerciseNamesByCategory(formData.category),
-        exerciseService.getRecommendedExercises(formData.category)
-      ]).then(([names, recommendations]) => {
-        // Filter out nulls from names
-        setExerciseNames(names.filter((n): n is string => !!n));
-        setRecommendedExercises(recommendations);
-        // Reset name if it's not in the new list and not empty
-        if (names.length > 0 && formData.name && !names.includes(formData.name)) {
-          setFormData(prev => ({ ...prev, name: '' }));
-        }
-      }).catch(error => {
-        console.error('Error fetching exercise data:', error);
-        setExerciseNames([]);
-        setRecommendedExercises([]);
-      });
+      exerciseService.getExerciseNamesByCategory(formData.category)
+        .then((names) => {
+          setExerciseNames(names.filter((n): n is string => !!n));
+          if (names.length > 0 && formData.name && !names.includes(formData.name)) {
+            setFormData(prev => ({ ...prev, name: '' }));
+          }
+        })
+        .catch(error => {
+          console.error('Error fetching exercise data:', error);
+          setExerciseNames([]);
+        });
     } else {
       setExerciseNames([]);
-      setRecommendedExercises([]);
     }
   }, [formData.category]);
 
@@ -350,7 +334,6 @@ export const ExerciseForm: React.FC<ExerciseFormProps> = ({ onSubmit, activeWork
         video_path: null,
       });
       setExerciseNames([]);
-      setRecommendedExercises([]);
       setSelectedImage(null);
       setImagePreview(null);
       setImageError(null);
@@ -371,14 +354,6 @@ export const ExerciseForm: React.FC<ExerciseFormProps> = ({ onSubmit, activeWork
 
   const handleExerciseChange = (value: string | null) => {
     setFormData(prev => ({ ...prev, name: value ? value.trim() : '' }));
-  };
-
-  const handleRecommendedExerciseClick = (exercise: string) => {
-    setFormData(prev => ({ ...prev, name: exercise }));
-  };
-
-  const formatLastUsedDate = (date: Date) => {
-    return format(date, 'MMM d');
   };
 
   const currentSetType: 'standard' | 'myorep' | 'dropset' =
@@ -460,49 +435,6 @@ export const ExerciseForm: React.FC<ExerciseFormProps> = ({ onSubmit, activeWork
             ))}
           </Select>
         </FormControl>
-        {formData.category && (
-          <Paper 
-            elevation={0} 
-            sx={{ 
-              p: 2, 
-              bgcolor: 'background.default',
-              width: '100%',
-              boxSizing: 'border-box',
-              overflow: 'hidden'
-            }}
-          >
-            <Typography variant="subtitle2" color="text.secondary" gutterBottom>
-              Recommended Exercises (Least Recently Used):
-            </Typography>
-            {recommendedExercises.length > 0 ? (
-              <Box 
-                sx={{ 
-                  display: 'flex', 
-                  gap: 1, 
-                  flexWrap: 'wrap',
-                  width: '100%',
-                  boxSizing: 'border-box'
-                }}
-              >
-                {recommendedExercises.map((exercise) => (
-                  <Chip
-                    key={exercise.name}
-                    label={`${exercise.name} (${formatLastUsedDate(exercise.lastUsed)})`}
-                    onClick={() => handleRecommendedExerciseClick(exercise.name)}
-                    color="primary"
-                    variant="outlined"
-                    clickable
-                    sx={{ maxWidth: '100%' }}
-                  />
-                ))}
-              </Box>
-            ) : (
-              <Typography variant="body2" color="text.secondary" sx={{ fontStyle: 'italic' }}>
-                Not enough history to display exercise Recommendations
-              </Typography>
-            )}
-          </Paper>
-        )}
         <Autocomplete
           freeSolo
           options={exerciseNames.filter((n): n is string => !!n)}
@@ -522,19 +454,19 @@ export const ExerciseForm: React.FC<ExerciseFormProps> = ({ onSubmit, activeWork
           )}
         />
         <TextField
-          label="Reps"
-          type="number"
-          value={formData.reps}
-          onChange={(e) => setFormData({ ...formData, reps: Number(e.target.value) })}
-          required
-          fullWidth
-          inputProps={{ min: 0 }}
-        />
-        <TextField
           label="Weight"
           type="number"
           value={formData.weight}
           onChange={(e) => setFormData({ ...formData, weight: parseFloat(e.target.value) })}
+          required
+          fullWidth
+          inputProps={{ min: 0, step: 'any' }}
+        />
+        <TextField
+          label="Reps"
+          type="number"
+          value={formData.reps}
+          onChange={(e) => setFormData({ ...formData, reps: parseFloat(e.target.value) })}
           required
           fullWidth
           inputProps={{ min: 0, step: 'any' }}
