@@ -454,19 +454,19 @@ export const ExerciseForm: React.FC<ExerciseFormProps> = ({ onSubmit, activeWork
           )}
         />
         <TextField
-          label="Reps"
+          label="Weight"
           type="number"
-          value={formData.reps}
-          onChange={(e) => setFormData({ ...formData, reps: parseFloat(e.target.value) })}
+          value={formData.weight}
+          onChange={(e) => setFormData({ ...formData, weight: parseFloat(e.target.value) })}
           required
           fullWidth
           inputProps={{ min: 0, step: 'any' }}
         />
         <TextField
-          label="Weight"
+          label="Reps"
           type="number"
-          value={formData.weight}
-          onChange={(e) => setFormData({ ...formData, weight: parseFloat(e.target.value) })}
+          value={formData.reps}
+          onChange={(e) => setFormData({ ...formData, reps: parseFloat(e.target.value) })}
           required
           fullWidth
           inputProps={{ min: 0, step: 'any' }}
