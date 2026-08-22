@@ -62,18 +62,49 @@ export const exerciseService = {
     const { data: { user }, error: userError } = await supabase.auth.getUser();
     if (userError) throw userError;
     if (!user) throw new Error('User must be authenticated to get exercises');
-    
-    const { data, error } = await supabase
-      .from('exercises')
+
+    const uniqueNames = (rows: { name: string | null }[] | null) =>
+      [...new Set((rows || []).map(row => row.name).filter((name): name is string => !!name))];
+
+    // Distinct names (user history + canonical). Querying `exercises` rows
+    // directly is capped at 1000 by PostgREST, so frequent lifts crowd out
+    // the rest of the type-ahead list.
+    const { data: optionRows, error: optionsError } = await supabase
+      .from('exercise_options')
       .select('name')
       .eq('category', category)
-      .eq('user_id', user.id)
       .order('name', { ascending: true });
 
-    if (error) throw error;
-    
-    // Get unique names
-    return [...new Set(data?.map(exercise => exercise.name) || [])];
+    if (!optionsError) {
+      return uniqueNames(optionRows);
+    }
+
+    const pageSize = 1000;
+    const names = new Set<string>();
+    let from = 0;
+
+    while (true) {
+      const { data, error } = await supabase
+        .from('exercises')
+        .select('name')
+        .eq('category', category)
+        .eq('user_id', user.id)
+        .order('name', { ascending: true })
+        .order('id', { ascending: true })
+        .range(from, from + pageSize - 1);
+
+      if (error) throw error;
+      if (!data || data.length === 0) break;
+
+      data.forEach(exercise => {
+        if (exercise.name) names.add(exercise.name);
+      });
+
+      if (data.length < pageSize) break;
+      from += pageSize;
+    }
+
+    return [...names];
   },
 
   async getRecommendedExercises(category: string): Promise<RecommendedExercise[]> {

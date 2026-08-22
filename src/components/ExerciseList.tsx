@@ -1094,7 +1094,8 @@ export const ExerciseList: React.FC<ExerciseListProps> = ({ onDelete, activeWork
                 fullWidth
                 type="number"
                 value={editForm.reps || 0}
-                onChange={(e) => handleEditFormChange('reps', Number(e.target.value))}
+                onChange={(e) => handleEditFormChange('reps', parseFloat(e.target.value))}
+                inputProps={{ min: 0, step: 'any' }}
                 sx={{
                   '& .MuiOutlinedInput-root': {
                     backgroundColor: '#1f1f1f',
