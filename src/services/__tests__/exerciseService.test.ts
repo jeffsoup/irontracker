@@ -21,6 +21,7 @@ function createMockSupabase() {
   const mockGt = vi.fn();
   const mockOrder = vi.fn();
   const mockLimit = vi.fn();
+  const mockRange = vi.fn();
   const mockSingle = vi.fn();
   const mockMaybeSingle = vi.fn();
 
@@ -37,6 +38,7 @@ function createMockSupabase() {
     gt: mockGt,
     order: mockOrder,
     limit: mockLimit,
+    range: mockRange,
     single: mockSingle,
     maybeSingle: mockMaybeSingle,
   };
@@ -177,7 +179,7 @@ describe('exerciseService', () => {
   });
 
   describe('getExerciseNamesByCategory', () => {
-    it('should return unique exercise names for a category', async () => {
+    it('should return unique exercise names from exercise_options', async () => {
       const mockUser = { id: 'user-123' };
       const mockExercises = [
         { name: 'Bench Press' },
@@ -194,8 +196,36 @@ describe('exerciseService', () => {
 
       const result = await exerciseService.getExerciseNamesByCategory('Chest');
 
-      expect(mockSupabase.from).toHaveBeenCalledWith('exercises');
+      expect(mockSupabase.from).toHaveBeenCalledWith('exercise_options');
       expect(result).toEqual(['Bench Press', 'Incline Press']);
+    });
+
+    it('should page through user exercises when exercise_options is unavailable', async () => {
+      const mockUser = { id: 'user-123' };
+      const firstPage = Array.from({ length: 1000 }, (_, index) => ({
+        name: index < 999 ? 'Bench Press' : 'Cable Fly',
+      }));
+      const secondPage = [{ name: 'Dips' }, { name: 'Cable Fly' }];
+
+      mockSupabase.auth.getUser.mockResolvedValue({
+        data: { user: mockUser },
+        error: null,
+      });
+
+      mockSupabase._mocks.order
+        .mockResolvedValueOnce({ data: null, error: { message: 'view unavailable' } })
+        .mockReturnValueOnce(mockSupabase._mocks)
+        .mockReturnValueOnce(mockSupabase._mocks);
+
+      mockSupabase._mocks.range
+        .mockResolvedValueOnce({ data: firstPage, error: null })
+        .mockResolvedValueOnce({ data: secondPage, error: null });
+
+      const result = await exerciseService.getExerciseNamesByCategory('Chest');
+
+      expect(mockSupabase.from).toHaveBeenCalledWith('exercise_options');
+      expect(mockSupabase.from).toHaveBeenCalledWith('exercises');
+      expect(result).toEqual(['Bench Press', 'Cable Fly', 'Dips']);
     });
 
     it('should throw error when user is not authenticated', async () => {
